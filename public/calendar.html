@@ -267,8 +267,18 @@
 
 <header>
     <h1>Engagement Calendar 2026</h1>
-    <a href="/admin.html">&#9998; Admin</a>
+    <div style="display:flex;align-items:center;gap:6px;">
+        <a href="/calendar.html" style="color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;background:rgba(255,255,255,0.15);color:#fff;">&#128197; View Calendar</a>
+        <a href="/admin.html" id="nav-admin" style="color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;transition:background .15s">&#9998; Admin</a>
+        <a href="/login.html" id="nav-login" style="display:none;color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;transition:background .15s">Login</a>
+    </div>
 </header>
+<script>
+fetch('/api/auth-status').then(r=>r.json()).then(d=>{
+    document.getElementById('nav-login').style.display = d.authenticated ? 'none' : 'inline-block';
+    document.getElementById('nav-admin').style.color = d.authenticated ? '#fff' : '#a0a8d0';
+});
+</script>
 
 <div class="layout">
     <!-- Left well: legend -->

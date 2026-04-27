@@ -3,267 +3,607 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editable Engagement Calendar</title>
+    <title>Admin — Engagement Calendar</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f4f4;
-        }
-        h1 { margin-bottom: 20px; }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        .month-card {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
-            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #eef0f3;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: transform 0.1s ease-in-out;
         }
-        .month-card:hover { transform: translateY(-2px); }
-        .month-header { padding: 10px; color: #ffffff; font-weight: bold; }
-        .month-body { padding: 10px; flex: 1; }
-        .month-range { font-size: 0.85em; color: #555555; margin-bottom: 8px; }
-        .month-events { list-style: none; padding: 0; margin: 0; }
-        .month-events li {
-            margin-bottom: 4px;
-            padding: 4px;
-            border-left: 4px solid transparent;
-            border-radius: 4px;
-        }
-        .month-events li.weekend { background: #eeeeee; }
-        .month-events li.holiday { border-left-color: #d32f2f; font-weight: bold; }
-        #modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
+
+        /* ── Nav ── */
+        nav {
+            background: #1a1f36;
+            color: #fff;
+            padding: 0 32px;
+            display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 1000;
+            justify-content: space-between;
+            height: 58px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .modal-content {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+        .nav-brand { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.3px; }
+        .nav-links { display: flex; align-items: center; gap: 6px; }
+        .nav-link {
+            color: #a0a8d0;
+            text-decoration: none;
+            font-size: 0.88rem;
+            padding: 7px 14px;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-link.active { background: rgba(255,255,255,0.15); color: #fff; }
+        .nav-btn-logout {
+            background: rgba(229,57,53,0.2);
+            color: #ef9a9a;
+            border: 1px solid rgba(229,57,53,0.3);
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .nav-btn-logout:hover { background: rgba(229,57,53,0.4); color: #fff; }
+
+        /* ── Layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 0;
+            flex: 1;
+            padding: 28px 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 20px 14px;
+            height: fit-content;
+            position: sticky;
+            top: 82px;
+            margin-right: 24px;
+        }
+        .sidebar h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            margin-bottom: 14px;
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 0.87rem;
+            color: #333;
+            transition: background 0.12s;
+            text-decoration: none;
+            margin-bottom: 2px;
+        }
+        .sidebar-item:hover { background: #f0f0f0; }
+        .sidebar-item.active { background: #1a1f36; color: #fff; }
+        .sidebar-item.active .dot { background: #fff !important; }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 12px 0;
+        }
+        .add-month-btn {
+            width: 100%;
+            padding: 9px;
+            background: #1a1f36;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: background 0.15s;
+        }
+        .add-month-btn:hover { background: #2d3561; }
+
+        /* ── Main ── */
+        .main { min-width: 0; }
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1a1f36;
+            margin-bottom: 6px;
+        }
+        .page-subtitle {
+            font-size: 0.88rem;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        /* ── Month grid ── */
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .month-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+        .month-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.13);
+        }
+        .month-card.active { outline: 3px solid #1a1f36; }
+        .card-header {
+            padding: 14px 16px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .edit-badge {
+            background: rgba(255,255,255,0.25);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+        }
+        .card-body { padding: 12px 16px 14px; }
+        .card-event-count {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        .event-preview {
+            font-size: 0.8rem;
+            color: #555;
+            padding: 3px 0;
+            border-bottom: 1px solid #f5f5f5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event-preview:last-child { border-bottom: none; }
+        .event-preview.holiday { color: #c62828; font-weight: 600; }
+
+        /* ── Drawer ── */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 200;
+        }
+        .drawer-overlay.open { display: block; }
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -520px;
+            width: 480px;
+            max-width: 95vw;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+            z-index: 201;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+        .drawer.open { right: 0; }
+
+        .drawer-header {
+            padding: 20px 24px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .drawer-title { font-size: 1.2rem; font-weight: 700; }
+        .drawer-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .drawer-close:hover { background: rgba(255,255,255,0.35); }
+
+        .drawer-body {
+            flex: 1;
             overflow-y: auto;
+            padding: 24px;
         }
-        .modal-content h2 { margin-top: 0; }
-        .event-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+        /* Color picker row */
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 14px 16px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .color-row label { font-size: 0.88rem; font-weight: 600; color: #444; flex: 1; }
+        .color-preview {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            border: 2px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .color-preview:hover { transform: scale(1.1); }
+        #drawer-color { width: 0; height: 0; opacity: 0; position: absolute; }
+
+        /* Events section */
+        .section-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .event-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 36px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
         .event-row input[type="date"],
         .event-row input[type="text"] {
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            padding: 7px 9px;
+            font-size: 0.87rem;
+            outline: none;
+            width: 100%;
+            background: #fff;
+            transition: border-color 0.15s;
+        }
+        .event-row input:focus { border-color: #1a1f36; }
+        .del-btn {
+            width: 32px; height: 32px;
+            background: #fdecea;
+            color: #c62828;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .del-btn:hover { background: #ffcdd2; }
+
+        .add-event-btn {
+            width: 100%;
+            padding: 10px;
+            background: #fff;
+            border: 1.5px dashed #ccc;
+            border-radius: 8px;
+            color: #888;
+            font-size: 0.88rem;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .add-event-btn:hover { border-color: #1a1f36; color: #1a1f36; }
+
+        /* Drawer footer */
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .btn-save {
             flex: 1;
-            padding: 5px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-        }
-        .event-row button.delete {
-            background: #e53935;
-            color: #ffffff;
+            padding: 12px;
+            background: #1a1f36;
+            color: #fff;
             border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.15s;
         }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .modal-buttons button {
-            padding: 8px 12px;
+        .btn-save:hover { background: #2d3561; }
+        .btn-cancel {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            color: #444;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 0.95rem;
             cursor: pointer;
+            transition: background 0.15s;
         }
-        #cancel-btn { background: #aaaaaa; color: #ffffff; }
-        #save-btn { background: #4caf50; color: #ffffff; }
-        #status { font-size: 0.85em; color: #555; margin-bottom: 10px; }
+        .btn-cancel:hover { background: #e0e0e0; }
+
+        .save-status {
+            font-size: 0.82rem;
+            color: #388e3c;
+            text-align: center;
+            padding: 2px 0 0;
+            min-height: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .layout { grid-template-columns: 1fr; padding: 16px; }
+            .sidebar { display: none; }
+        }
     </style>
 </head>
 <body>
-    <h1>Editable Engagement Calendar</h1>
-    <p>Click a month card to edit its events, colours and dates. Changes are saved to the server.</p>
-    <div id="status"></div>
-    <div class="calendar-grid" id="calendar"></div>
 
-    <div id="modal">
-        <div class="modal-content">
-            <h2 id="modal-title">Edit Month</h2>
-            <div style="margin-bottom:10px;">
-                <label><strong>Card Colour:</strong> <input type="color" id="card-color" /></label>
-            </div>
-            <div id="events-container"></div>
-            <button id="add-event">Add Event</button>
-            <div class="modal-buttons">
-                <button id="cancel-btn">Cancel</button>
-                <button id="save-btn">Save</button>
-            </div>
-        </div>
+<!-- Nav -->
+<nav>
+    <span class="nav-brand">Engagement Calendar 2026</span>
+    <div class="nav-links">
+        <a href="/calendar.html" class="nav-link">&#128197; View Calendar</a>
+        <a href="/admin.html" class="nav-link active">&#9998; Admin</a>
+        <button class="nav-btn-logout" onclick="logout()">Logout</button>
     </div>
+</nav>
 
-    <script>
-    let calendarData = {};
-    let currentEditMonth = null;
+<!-- Layout -->
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <h3>Months</h3>
+        <div id="sidebar-months"></div>
+        <hr class="sidebar-divider">
+        <button class="add-month-btn" onclick="addMonth()">+ Add Month</button>
+    </aside>
 
-    function setStatus(msg) {
-        document.getElementById('status').textContent = msg;
-    }
+    <!-- Main -->
+    <main class="main">
+        <div class="page-title">Admin Panel</div>
+        <div class="page-subtitle">Click any month card to edit events, colours and dates.</div>
+        <div class="months-grid" id="months-grid"></div>
+    </main>
+</div>
 
-    async function loadData() {
-        try {
-            const res = await fetch('/api/calendar');
-            calendarData = await res.json();
-        } catch (e) {
-            setStatus('Error loading data from server.');
-        }
-    }
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
 
-    async function saveData() {
-        try {
-            const res = await fetch('/api/calendar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(calendarData)
-            });
-            const result = await res.json();
-            if (!result.ok) setStatus('Save failed.');
-            else setStatus('Saved.');
-        } catch (e) {
-            setStatus('Error saving data to server.');
-        }
-    }
+<!-- Edit Drawer -->
+<div class="drawer" id="drawer">
+    <div class="drawer-header" id="drawer-header">
+        <span class="drawer-title" id="drawer-title">Edit Month</span>
+        <button class="drawer-close" onclick="closeDrawer()">&#x2715;</button>
+    </div>
+    <div class="drawer-body">
+        <div class="color-row">
+            <label>Card Colour</label>
+            <div class="color-preview" id="color-preview" onclick="document.getElementById('drawer-color').click()"></div>
+            <input type="color" id="drawer-color" oninput="updateColorPreview(this.value)" />
+        </div>
+        <div class="section-label">Events</div>
+        <div id="events-list"></div>
+        <button class="add-event-btn" onclick="addEventRow()">+ Add Event</button>
+    </div>
+    <div class="drawer-footer">
+        <button class="btn-cancel" onclick="closeDrawer()">Cancel</button>
+        <button class="btn-save" onclick="saveMonth()">Save Changes</button>
+    </div>
+    <div class="save-status" id="save-status"></div>
+</div>
 
-    function formatDateLabel(dateStr) {
-        const date = new Date(dateStr + 'T00:00:00');
-        const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
-        return `${month} ${date.getDate()}`;
-    }
+<script>
+let calendarData = {};
+let currentMonth = null;
 
-    function ordinal(num) {
-        const s = ["th","st","nd","rd"], v = num % 100;
-        return num + (s[(v-20)%10] || s[v] || s[0]);
-    }
+// ── Auth guard ──────────────────────────────────────────────────────────────
+fetch('/api/auth-status').then(r => r.json()).then(d => {
+    if (!d.authenticated) window.location.href = '/login.html';
+});
 
-    function getDateRangeText(events) {
-        if (!events || events.length === 0) return '';
-        const days = events.map(ev => new Date(ev.date + 'T00:00:00').getDate());
-        return `${ordinal(Math.min(...days))} - ${ordinal(Math.max(...days))}`;
-    }
+async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login.html';
+}
 
-    function buildCalendar() {
-        const container = document.getElementById('calendar');
-        container.innerHTML = '';
-        Object.keys(calendarData).forEach(month => {
-            const cardData = calendarData[month];
-            const card = document.createElement('div');
-            card.className = 'month-card';
-            card.dataset.month = month;
+// ── Data ────────────────────────────────────────────────────────────────────
+async function loadData() {
+    const res = await fetch('/api/calendar');
+    calendarData = await res.json();
+    renderAll();
+}
 
-            const header = document.createElement('div');
-            header.className = 'month-header';
-            header.style.background = cardData.color || '#007bff';
-            header.textContent = month;
-            card.appendChild(header);
+async function persist() {
+    const res = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(calendarData)
+    });
+    return res.json();
+}
 
-            const body = document.createElement('div');
-            body.className = 'month-body';
+function isHoliday(ev) {
+    return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day');
+}
+function formatShort(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
 
-            const range = document.createElement('div');
-            range.className = 'month-range';
-            range.textContent = getDateRangeText(cardData.events);
-            body.appendChild(range);
+// ── Render ──────────────────────────────────────────────────────────────────
+function renderAll() {
+    renderSidebar();
+    renderGrid();
+}
 
-            const ul = document.createElement('ul');
-            ul.className = 'month-events';
-            (cardData.events || []).sort((a,b) => a.date.localeCompare(b.date)).forEach(ev => {
-                const li = document.createElement('li');
-                const day = new Date(ev.date + 'T00:00:00').getUTCDay();
-                if (day === 0 || day === 6) li.classList.add('weekend');
-                if (ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day')) li.classList.add('holiday');
-                li.textContent = `${formatDateLabel(ev.date)}: ${ev.name}`;
-                ul.appendChild(li);
-            });
-            body.appendChild(ul);
-            card.appendChild(body);
-            card.addEventListener('click', () => openEditor(month));
-            container.appendChild(card);
-        });
-    }
+function renderSidebar() {
+    const el = document.getElementById('sidebar-months');
+    el.innerHTML = '';
+    Object.keys(calendarData).forEach(month => {
+        const color = calendarData[month].color || '#007bff';
+        const item = document.createElement('div');
+        item.className = 'sidebar-item' + (currentMonth === month ? ' active' : '');
+        item.id = `sb-${month}`;
+        item.innerHTML = `<span class="dot" style="background:${color}"></span>${month}`;
+        item.onclick = () => openDrawer(month);
+        el.appendChild(item);
+    });
+}
 
-    function openEditor(month) {
-        currentEditMonth = month;
+function renderGrid() {
+    const grid = document.getElementById('months-grid');
+    grid.innerHTML = '';
+    Object.keys(calendarData).forEach(month => {
         const data = calendarData[month];
-        document.getElementById('modal-title').textContent = `Edit ${month}`;
-        document.getElementById('card-color').value = data.color || '#007bff';
-        const eventsContainer = document.getElementById('events-container');
-        eventsContainer.innerHTML = '';
-        (data.events || []).sort((a,b) => a.date.localeCompare(b.date)).forEach(ev => addEventRow(ev.date, ev.name));
-        document.getElementById('modal').style.display = 'flex';
-    }
+        const events = (data.events || []).sort((a, b) => a.date.localeCompare(b.date));
+        const card = document.createElement('div');
+        card.className = 'month-card' + (currentMonth === month ? ' active' : '');
+        card.id = `card-${month}`;
 
-    function addEventRow(dateValue = '', nameValue = '') {
-        const container = document.getElementById('events-container');
-        const row = document.createElement('div');
-        row.className = 'event-row';
+        const preview = events.slice(0, 4).map(ev =>
+            `<div class="event-preview ${isHoliday(ev) ? 'holiday' : ''}">${formatShort(ev.date)}: ${ev.name}</div>`
+        ).join('');
 
-        const dateInput = document.createElement('input');
-        dateInput.type = 'date';
-        dateInput.value = dateValue;
-
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.placeholder = 'Event name';
-        nameInput.value = nameValue;
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.className = 'delete';
-        delBtn.addEventListener('click', () => container.removeChild(row));
-
-        row.appendChild(dateInput);
-        row.appendChild(nameInput);
-        row.appendChild(delBtn);
-        container.appendChild(row);
-    }
-
-    document.getElementById('add-event').addEventListener('click', () => addEventRow('', ''));
-
-    document.getElementById('cancel-btn').addEventListener('click', () => {
-        document.getElementById('modal').style.display = 'none';
-        currentEditMonth = null;
+        card.innerHTML = `
+            <div class="card-header" style="background:${data.color || '#007bff'}">
+                <span>${month}</span>
+                <span class="edit-badge">Edit</span>
+            </div>
+            <div class="card-body">
+                <div class="card-event-count">${events.length} event${events.length !== 1 ? 's' : ''}</div>
+                ${preview}
+                ${events.length > 4 ? `<div class="event-preview" style="color:#aaa">+${events.length - 4} more…</div>` : ''}
+            </div>`;
+        card.onclick = () => openDrawer(month);
+        grid.appendChild(card);
     });
+}
 
-    document.getElementById('save-btn').addEventListener('click', async () => {
-        if (!currentEditMonth) return;
-        const colorVal = document.getElementById('card-color').value;
-        const rows = document.querySelectorAll('#events-container .event-row');
-        const newEvents = [];
-        rows.forEach(row => {
-            const date = row.querySelector('input[type="date"]').value;
-            const name = row.querySelector('input[type="text"]').value.trim();
-            if (date && name) newEvents.push({ date, name });
-        });
-        calendarData[currentEditMonth] = {
-            color: colorVal,
-            events: newEvents.sort((a,b) => a.date.localeCompare(b.date))
-        };
-        await saveData();
-        buildCalendar();
-        document.getElementById('modal').style.display = 'none';
-        currentEditMonth = null;
+// ── Drawer ──────────────────────────────────────────────────────────────────
+function openDrawer(month) {
+    currentMonth = month;
+    const data = calendarData[month];
+
+    document.getElementById('drawer-title').textContent = `Edit — ${month}`;
+    document.getElementById('drawer-header').style.background = data.color || '#007bff';
+    document.getElementById('drawer-color').value = data.color || '#007bff';
+    document.getElementById('color-preview').style.background = data.color || '#007bff';
+    document.getElementById('save-status').textContent = '';
+
+    const list = document.getElementById('events-list');
+    list.innerHTML = '';
+    (data.events || []).sort((a, b) => a.date.localeCompare(b.date)).forEach(ev => addEventRow(ev.date, ev.name));
+
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
+
+    // Highlight active card and sidebar item
+    renderAll();
+}
+
+function closeDrawer() {
+    currentMonth = null;
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+    renderAll();
+}
+
+function updateColorPreview(val) {
+    document.getElementById('color-preview').style.background = val;
+    document.getElementById('drawer-header').style.background = val;
+}
+
+function addEventRow(dateVal = '', nameVal = '') {
+    const list = document.getElementById('events-list');
+    const row = document.createElement('div');
+    row.className = 'event-row';
+    row.innerHTML = `
+        <input type="date" value="${dateVal}" />
+        <input type="text" placeholder="Event name" value="${nameVal}" />
+        <button class="del-btn" title="Remove">&#x2715;</button>`;
+    row.querySelector('.del-btn').onclick = () => list.removeChild(row);
+    list.appendChild(row);
+}
+
+async function saveMonth() {
+    if (!currentMonth) return;
+    const color = document.getElementById('drawer-color').value;
+    const rows  = document.querySelectorAll('#events-list .event-row');
+    const events = [];
+    rows.forEach(row => {
+        const date = row.querySelector('input[type="date"]').value;
+        const name = row.querySelector('input[type="text"]').value.trim();
+        if (date && name) events.push({ date, name });
     });
+    calendarData[currentMonth] = { color, events: events.sort((a, b) => a.date.localeCompare(b.date)) };
 
-    (async () => {
-        await loadData();
-        buildCalendar();
-    })();
-    </script>
+    const btn = document.querySelector('.btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const result = await persist();
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+
+    if (result.ok) {
+        document.getElementById('save-status').textContent = '✓ Saved successfully';
+        renderAll();
+        // Update drawer header color live
+        document.getElementById('drawer-header').style.background = color;
+    } else {
+        document.getElementById('save-status').style.color = '#c62828';
+        document.getElementById('save-status').textContent = 'Save failed — please try again';
+    }
+}
+
+// ── Add month ────────────────────────────────────────────────────────────────
+function addMonth() {
+    const name = prompt('Month name (e.g. "January"):');
+    if (!name || !name.trim()) return;
+    const key = name.trim();
+    if (calendarData[key]) { alert('That month already exists.'); return; }
+    calendarData[key] = { color: '#607d8b', events: [] };
+    renderAll();
+    openDrawer(key);
+}
+
+loadData();
+</script>
 </body>
 </html>
