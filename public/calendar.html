@@ -80,7 +80,8 @@
         .cal-cell { min-height: 70px; border-radius: 8px; padding: 6px 7px; background: #f8f9fa; font-size: .82rem; position: relative; transition: background .12s; }
         .cal-cell.empty { background: transparent; box-shadow: none; }
         .cal-cell.weekend { background: #f0f0f0; }
-        .cal-cell.has-event { background: #e8f5e9; }
+        .cal-cell.has-event    { background: #e8f5e9; }
+        .cal-cell.has-birthday { background: #fff8e1; }
         .cal-cell.has-holiday { background: #fdecea; }
         .cal-cell.today .cell-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
         .cal-cell.clickable { cursor: pointer; }
@@ -88,7 +89,8 @@
         .cal-cell.selected { outline: 2px solid #1a1f36; }
         .cell-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
         .cell-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.06); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cell-ev-tag.holiday { background: #ffcdd2; color: #b71c1c; font-weight: 600; }
+        .cell-ev-tag.holiday  { background: #ffcdd2; color: #b71c1c; font-weight: 600; }
+        .cell-ev-tag.birthday { background: #fff3cd; color: #856404; font-weight: 600; }
         .cell-reactions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
         .cell-rxn { font-size: .65rem; color: #888; display: flex; align-items: center; gap: 2px; }
 
@@ -151,6 +153,7 @@
         <div class="legend-item"><div class="legend-swatch" style="background:#fdecea;border:1px solid #eee"></div>Holiday day</div>
         <div class="legend-item"><div class="legend-swatch" style="background:#f0f0f0;border:1px solid #eee"></div>Weekend</div>
         <div class="legend-item"><div class="legend-swatch" style="background:#e8f5e9;border:1px solid #eee"></div>Event day</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#fff8e1;border:1px solid #eee"></div>Birthday</div>
         <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
         <h3>Months</h3>
         <div id="month-nav"></div>
@@ -173,13 +176,18 @@
 
 <script>
 let calendarData  = {};
+let birthdayEvents = []; // overlaid on all months
 let monthKeys     = [];
 let activeMonth   = null;
 let expandedEl    = null;
-let me            = null; // { username, role }
+let me            = null;
 let activeFeedbackKey = null;
 
 const TODAY = new Date();
+
+// Auth-ready promise — ensures feedback panel always knows auth state
+let resolveAuth;
+const authReady = new Promise(resolve => { resolveAuth = resolve; });
 
 // ── Auth check ────────────────────────────────────────────────────────────────
 fetch('/api/auth-status').then(r=>r.json()).then(d => {
@@ -191,6 +199,7 @@ fetch('/api/auth-status').then(r=>r.json()).then(d => {
         if (d.role === 'superadmin') document.getElementById('nav-users').style.display = 'inline-block';
         loadBookmarks();
     }
+    resolveAuth(); // unblock any waiting openFeedback calls
 });
 
 async function logout() {
@@ -211,8 +220,9 @@ function eventKey(ev) { return ev.date; }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 async function loadData() {
-    const r = await fetch('/api/calendar');
-    calendarData = await r.json();
+    const [calRes, bdRes] = await Promise.all([fetch('/api/calendar'), fetch('/api/birthdays')]);
+    calendarData   = await calRes.json();
+    birthdayEvents = await bdRes.json();
     monthKeys = Object.keys(calendarData);
     buildGrid(); buildUpcoming(); buildMonthNav();
 }
@@ -257,11 +267,15 @@ function buildUpcoming() {
         const color = calendarData[m].color||'#007bff';
         (calendarData[m].events||[]).forEach(ev => all.push({...ev, color, month: m}));
     });
+    birthdayEvents.forEach(bd => {
+        const month = monthKeys.find(m => (calendarData[m].events||[]).some(e => e.date.slice(5,7) === bd.date.slice(5,7))) || monthKeys[0];
+        all.push({...bd, color:'#f59e0b', month, isBirthday: true});
+    });
     all.sort((a,b) => a.date.localeCompare(b.date));
     list.innerHTML = all.map(ev => `
         <div class="upcoming-event" onclick="openMonth('${ev.month}','${ev.date}')">
             <div class="ev-date">${formatShort(ev.date)}</div>
-            <div class="ev-name"><span class="ev-dot" style="background:${isHoliday(ev)?'#d32f2f':ev.color}"></span>${ev.name}</div>
+            <div class="ev-name"><span class="ev-dot" style="background:${ev.isBirthday?'#f59e0b':isHoliday(ev)?'#d32f2f':ev.color}"></span>${ev.name}</div>
         </div>`).join('');
 }
 
@@ -349,8 +363,15 @@ function renderExpandedPanel(panel, month, highlightDate) {
     const daysInMonth = new Date(year, monthIdx+1, 0).getDate();
     const firstDow    = new Date(year, monthIdx, 1).getDay();
 
+    // Merge birthday events for this month
+    const allEvents = [...events];
+    birthdayEvents.forEach(bd => {
+        const [y, m] = bd.date.split('-').map(Number);
+        if (y === year && m === monthIdx + 1) allEvents.push({ ...bd, isBirthday: true });
+    });
+
     const eventMap = {};
-    events.forEach(ev => {
+    allEvents.forEach(ev => {
         const d = parseInt(ev.date.split('-')[2]);
         if (!eventMap[d]) eventMap[d] = [];
         eventMap[d].push(ev);
@@ -370,16 +391,18 @@ function renderExpandedPanel(panel, month, highlightDate) {
         const isTdy    = TODAY.getFullYear()===year && TODAY.getMonth()===monthIdx && TODAY.getDate()===d;
         const isHl     = dateStr === highlightDate;
 
+        const hasBd = dayEvs.some(ev => ev.isBirthday);
         let cls = 'cal-cell';
         if (isWknd) cls += ' weekend';
         if (hasHol) cls += ' has-holiday';
+        else if (hasBd) cls += ' has-birthday';
         else if (hasEv) cls += ' has-event';
         if (isTdy)  cls += ' today';
         if (hasEv)  cls += ' clickable';
         if (isHl)   cls += ' selected';
 
         const evTags = dayEvs.map(ev =>
-            `<span class="cell-ev-tag ${isHoliday(ev)?'holiday':''}">${ev.name}</span>`
+            `<span class="cell-ev-tag ${ev.isBirthday ? 'birthday' : isHoliday(ev) ? 'holiday' : ''}">${ev.name}</span>`
         ).join('');
 
         const rxnBar = hasEv ? `<div class="cell-reactions" id="rxns-${dateStr}"></div>` : '';
@@ -435,7 +458,7 @@ async function loadCellReactions(dateStr) {
 
 // ── Feedback panel ────────────────────────────────────────────────────────────
 async function openFeedback(dateStr, cellEl) {
-    // Deselect previous
+    await authReady; // ensure me is set before rendering bookmark/react buttons
     if (activeFeedbackKey) document.getElementById(`cell-${activeFeedbackKey}`)?.classList.remove('selected');
     activeFeedbackKey = dateStr;
     cellEl.classList.add('selected');

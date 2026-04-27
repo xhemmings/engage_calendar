@@ -89,6 +89,12 @@
         <div class="field-error" id="err-email">Enter a valid email address</div>
       </div>
 
+      <div class="field">
+        <label>Date of Birth</label>
+        <input type="date" id="birthday" />
+        <div class="field-hint">Used to display your birthday on the calendar</div>
+      </div>
+
       <div class="section-sep">Login Details</div>
 
       <div class="field">
@@ -208,6 +214,7 @@ async function submitClaim() {
         firstName: document.getElementById('first-name').value.trim(),
         lastName:  document.getElementById('last-name').value.trim(),
         email:     document.getElementById('email').value.trim(),
+        birthday:  document.getElementById('birthday').value || null,
       })
     });
     const d = await r.json();

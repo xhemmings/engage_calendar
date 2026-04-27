@@ -70,6 +70,8 @@ async function initDB() {
       data JSONB NOT NULL
     );
 
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS birthday DATE;
+
     INSERT INTO users (username, phone, role)
     VALUES ('xavierh', '+18762903666', 'superadmin')
     ON CONFLICT DO NOTHING;
@@ -194,7 +196,7 @@ app.post('/api/invite/:token/claim', async (req, res) => {
   const inv = rows[0];
   if (!inv || inv.used || new Date() > new Date(inv.expires_at))
     return res.status(410).json({ error: 'Invalid or expired invite' });
-  const { username, phone, firstName, lastName, email } = req.body || {};
+  const { username, phone, firstName, lastName, email, birthday } = req.body || {};
   if (!username || !phone || !firstName || !lastName || !email)
     return res.status(400).json({ error: 'All fields are required' });
   const taken = await pool.query('SELECT 1 FROM users WHERE username=$1', [username]);
@@ -202,7 +204,7 @@ app.post('/api/invite/:token/claim', async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try { await sendOTP(phone, otp); }
   catch (e) { return res.status(500).json({ error: 'Failed to send verification code' }); }
-  const pending = jwt.sign({ otp, username, phone, firstName, lastName, email, inviteToken: req.params.token, role: inv.invite_role }, JWT_SECRET, { expiresIn: '5m' });
+  const pending = jwt.sign({ otp, username, phone, firstName, lastName, email, birthday: birthday||null, inviteToken: req.params.token, role: inv.invite_role }, JWT_SECRET, { expiresIn: '5m' });
   res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
   res.json({ ok: true });
 });
@@ -216,8 +218,8 @@ app.post('/api/invite/:token/verify', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM invites WHERE token=$1 AND used=false', [p.inviteToken]);
     if (!rows[0]) return res.status(410).json({ error: 'Invite no longer valid' });
     await pool.query('UPDATE invites SET used=true, used_by=$1, used_at=NOW() WHERE token=$2', [p.username, p.inviteToken]);
-    await pool.query('INSERT INTO users (username, phone, role, first_name, last_name, email, invited_by) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [p.username, p.phone, p.role, p.firstName, p.lastName, p.email, rows[0].created_by]);
+    await pool.query('INSERT INTO users (username, phone, role, first_name, last_name, email, birthday, invited_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [p.username, p.phone, p.role, p.firstName, p.lastName, p.email, p.birthday||null, rows[0].created_by]);
     res.clearCookie('otp_pending');
     const session = jwt.sign({ username: p.username, role: p.role }, JWT_SECRET, { expiresIn: '8h' });
     res.cookie('session', session, { httpOnly: true, maxAge: 28800000, sameSite: 'strict' });
@@ -301,6 +303,26 @@ app.delete('/api/me/bookmarks/:key', requireAuth, async (req, res) => {
   const s = getSession(req);
   await pool.query('DELETE FROM bookmarks WHERE event_key=$1 AND username=$2', [decodeURIComponent(req.params.key), s.username]);
   res.json({ ok: true });
+});
+
+// ── Birthdays ─────────────────────────────────────────────────────────────────
+app.get('/api/birthdays', async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT first_name, last_name, username, birthday FROM users WHERE birthday IS NOT NULL'
+  );
+  const year = new Date().getFullYear();
+  const events = rows.map(r => {
+    const bd = new Date(r.birthday);
+    const month = String(bd.getUTCMonth() + 1).padStart(2, '0');
+    const day   = String(bd.getUTCDate()).padStart(2, '0');
+    const firstName = r.first_name || r.username;
+    const lastName  = r.last_name  || '';
+    return {
+      date: `${year}-${month}-${day}`,
+      name: `🎂 ${firstName}${lastName ? ' ' + lastName : ''}'s Birthday`,
+    };
+  });
+  res.json(events);
 });
 
 // ── Calendar ──────────────────────────────────────────────────────────────────
