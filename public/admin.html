@@ -378,8 +378,9 @@
 <nav>
     <span class="nav-brand">Engagement Calendar 2026</span>
     <div class="nav-links">
-        <a href="/calendar.html" class="nav-link">&#128197; View Calendar</a>
+        <a href="/calendar.html" class="nav-link">&#128197; Calendar</a>
         <a href="/admin.html" class="nav-link active">&#9998; Admin</a>
+        <a href="/users.html" class="nav-link" id="nav-users" style="display:none">&#128100; Users</a>
         <button class="nav-btn-logout" onclick="logout()">Logout</button>
     </div>
 </nav>
@@ -435,6 +436,7 @@ let currentMonth = null;
 // ── Auth guard ──────────────────────────────────────────────────────────────
 fetch('/api/auth-status').then(r => r.json()).then(d => {
     if (!d.authenticated) window.location.href = '/login.html';
+    if (d.role === 'superadmin') document.getElementById('nav-users').style.display = 'inline-block';
 });
 
 async function logout() {

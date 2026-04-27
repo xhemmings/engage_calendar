@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management — Engagement Calendar</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef0f3; min-height: 100vh; display: flex; flex-direction: column; }
+
+        nav { background: #1a1f36; color: #fff; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 58px; position: sticky; top: 0; z-index: 100; }
+        .nav-brand { font-size: 1.1rem; font-weight: 700; }
+        .nav-links { display: flex; align-items: center; gap: 6px; }
+        .nav-link { color: #a0a8d0; text-decoration: none; font-size: .88rem; padding: 7px 14px; border-radius: 6px; transition: background .15s, color .15s; }
+        .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+        .nav-link.active { background: rgba(255,255,255,.15); color: #fff; }
+        .nav-btn-logout { background: rgba(229,57,53,.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,.3); padding: 7px 14px; border-radius: 6px; font-size: .88rem; cursor: pointer; transition: background .15s; }
+        .nav-btn-logout:hover { background: rgba(229,57,53,.4); color: #fff; }
+
+        .page { max-width: 900px; margin: 36px auto; padding: 0 24px; width: 100%; }
+
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { font-size: 1.5rem; color: #1a1f36; }
+        .page-header p { font-size: .88rem; color: #888; margin-top: 4px; }
+
+        .btn-primary { padding: 11px 20px; background: #1a1f36; color: #fff; border: none; border-radius: 9px; font-size: .9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s; }
+        .btn-primary:hover { background: #2d3561; }
+
+        /* Users table */
+        .users-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden; }
+        .users-card table { width: 100%; border-collapse: collapse; }
+        .users-card th { background: #f8f9fa; text-align: left; padding: 13px 20px; font-size: .75rem; text-transform: uppercase; letter-spacing: .8px; color: #888; font-weight: 700; border-bottom: 1px solid #eee; }
+        .users-card td { padding: 16px 20px; border-bottom: 1px solid #f5f5f5; font-size: .9rem; color: #333; vertical-align: middle; }
+        .users-card tr:last-child td { border-bottom: none; }
+        .users-card tr:hover td { background: #fafafa; }
+
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; color: #fff; flex-shrink: 0; }
+        .user-cell { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-weight: 600; color: #1a1f36; }
+        .user-since { font-size: .78rem; color: #aaa; margin-top: 2px; }
+
+        .role-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; letter-spacing: .3px; }
+        .role-superadmin { background: #e8eaf6; color: #3949ab; }
+        .role-admin { background: #e8f5e9; color: #2e7d32; }
+
+        .btn-delete { padding: 6px 14px; background: #fdecea; color: #c62828; border: none; border-radius: 6px; font-size: .82rem; cursor: pointer; font-weight: 600; transition: background .15s; }
+        .btn-delete:hover { background: #ffcdd2; }
+        .btn-delete:disabled { opacity: .4; cursor: default; }
+
+        /* Invite panel */
+        .invite-section { margin-top: 32px; }
+        .invite-section h2 { font-size: 1.1rem; color: #1a1f36; margin-bottom: 16px; font-weight: 700; }
+        .invite-history { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden; }
+        .invite-history table { width: 100%; border-collapse: collapse; }
+        .invite-history th { background: #f8f9fa; text-align: left; padding: 12px 18px; font-size: .75rem; text-transform: uppercase; letter-spacing: .8px; color: #888; font-weight: 700; border-bottom: 1px solid #eee; }
+        .invite-history td { padding: 13px 18px; border-bottom: 1px solid #f5f5f5; font-size: .87rem; color: #444; }
+        .invite-history tr:last-child td { border-bottom: none; }
+        .invite-empty { padding: 28px; text-align: center; color: #bbb; font-size: .9rem; }
+
+        .status-used { color: #888; }
+        .status-active { color: #2e7d32; font-weight: 600; }
+        .status-expired { color: #c62828; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: #fff; border-radius: 14px; padding: 36px; max-width: 500px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.18); }
+        .modal h3 { font-size: 1.2rem; color: #1a1f36; margin-bottom: 8px; }
+        .modal p { font-size: .88rem; color: #666; margin-bottom: 20px; }
+        .link-box { display: flex; gap: 10px; align-items: center; background: #f8f9fa; border: 1.5px solid #e0e0e0; border-radius: 9px; padding: 12px 14px; font-size: .85rem; color: #333; word-break: break-all; }
+        .link-text { flex: 1; }
+        .btn-copy { flex-shrink: 0; padding: 8px 14px; background: #1a1f36; color: #fff; border: none; border-radius: 7px; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .btn-copy:hover { background: #2d3561; }
+        .copy-note { font-size: .8rem; color: #22c55e; margin-top: 10px; display: none; }
+        .modal-close { width: 100%; padding: 12px; background: #f0f0f0; color: #444; border: none; border-radius: 9px; font-size: .95rem; cursor: pointer; margin-top: 20px; }
+        .modal-close:hover { background: #e0e0e0; }
+
+        /* Confirm modal */
+        .confirm-modal { background: #fff; border-radius: 14px; padding: 36px; max-width: 380px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.18); }
+        .confirm-modal h3 { font-size: 1.1rem; color: #1a1f36; margin-bottom: 10px; }
+        .confirm-modal p { font-size: .88rem; color: #666; margin-bottom: 24px; }
+        .confirm-btns { display: flex; gap: 10px; }
+        .btn-confirm-del { flex: 1; padding: 12px; background: #e53935; color: #fff; border: none; border-radius: 9px; font-size: .95rem; font-weight: 600; cursor: pointer; }
+        .btn-confirm-del:hover { background: #c62828; }
+        .btn-confirm-cancel { flex: 1; padding: 12px; background: #f0f0f0; color: #444; border: none; border-radius: 9px; font-size: .95rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+<nav>
+    <span class="nav-brand">Engagement Calendar 2026</span>
+    <div class="nav-links">
+        <a href="/calendar.html" class="nav-link">&#128197; Calendar</a>
+        <a href="/admin.html" class="nav-link">&#9998; Admin</a>
+        <a href="/users.html" class="nav-link active">&#128100; Users</a>
+        <button class="nav-btn-logout" onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>User Management</h1>
+            <p>Manage admin access and invite new team members.</p>
+        </div>
+        <button class="btn-primary" onclick="generateInvite()">
+            <span>&#43;</span> Generate Invite Link
+        </button>
+    </div>
+
+    <!-- Users table -->
+    <div class="users-card">
+        <table>
+            <thead><tr>
+                <th>User</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th></th>
+            </tr></thead>
+            <tbody id="users-tbody">
+                <tr><td colspan="5" style="padding:28px;text-align:center;color:#bbb">Loading…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Invite history -->
+    <div class="invite-section">
+        <h2>Invite Links</h2>
+        <div class="invite-history">
+            <table>
+                <thead><tr>
+                    <th>Created</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th>Used By</th>
+                </tr></thead>
+                <tbody id="invites-tbody">
+                    <tr><td colspan="4" class="invite-empty">No invite links yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Invite link modal -->
+<div class="modal-overlay" id="invite-modal">
+    <div class="modal">
+        <h3>&#128279; Invite Link Ready</h3>
+        <p>Share this link to give someone admin access. It expires in 48 hours and can only be used once.</p>
+        <div class="link-box">
+            <span class="link-text" id="invite-link-text"></span>
+            <button class="btn-copy" onclick="copyLink()">Copy</button>
+        </div>
+        <div class="copy-note" id="copy-note">&#10003; Copied to clipboard</div>
+        <button class="modal-close" onclick="closeInviteModal()">Done</button>
+    </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-overlay" id="confirm-modal">
+    <div class="confirm-modal">
+        <h3>Remove User</h3>
+        <p id="confirm-text">Are you sure you want to remove this user? They will lose admin access immediately.</p>
+        <div class="confirm-btns">
+            <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancel</button>
+            <button class="btn-confirm-del" onclick="confirmDelete()">Remove</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUser = null;
+let meUsername  = null;
+
+const COLORS = ['#1a1f36','#e91e63','#9c27b0','#f44336','#ff9800','#009688','#8bc34a','#ffc107'];
+function colorFor(name) { let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+function formatDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'; }
+function formatPhone(p) { return p || '—'; }
+
+// Guard: superadmin only
+fetch('/api/auth-status').then(r=>r.json()).then(d => {
+    if (!d.authenticated) { window.location.href='/login.html'; return; }
+    if (d.role !== 'superadmin') { window.location.href='/admin.html'; return; }
+    meUsername = d.username;
+    loadUsers();
+    loadInvites();
+});
+
+async function logout() {
+    await fetch('/api/logout', { method:'POST' });
+    window.location.href = '/login.html';
+}
+
+async function loadUsers() {
+    const r = await fetch('/api/users');
+    if (!r.ok) return;
+    const users = await r.json();
+    const tbody = document.getElementById('users-tbody');
+    const entries = Object.entries(users);
+    if (!entries.length) { tbody.innerHTML = '<tr><td colspan="5" style="padding:28px;text-align:center;color:#bbb">No users found.</td></tr>'; return; }
+    tbody.innerHTML = entries.map(([username, u]) => `
+        <tr>
+            <td>
+                <div class="user-cell">
+                    <div class="avatar" style="background:${colorFor(username)}">${username[0].toUpperCase()}</div>
+                    <div>
+                        <div class="user-name">${username}</div>
+                        ${u.invitedBy ? `<div class="user-since">Invited by ${u.invitedBy}</div>` : '<div class="user-since">Founder</div>'}
+                    </div>
+                </div>
+            </td>
+            <td>${formatPhone(u.phone)}</td>
+            <td><span class="role-badge role-${u.role}">${u.role === 'superadmin' ? '&#9733; Super Admin' : 'Admin'}</span></td>
+            <td>${formatDate(u.createdAt)}</td>
+            <td>
+                ${username !== meUsername && u.role !== 'superadmin'
+                    ? `<button class="btn-delete" onclick="askDelete('${username}')">Remove</button>`
+                    : '<span style="color:#ddd;font-size:.8rem">—</span>'}
+            </td>
+        </tr>`).join('');
+}
+
+async function loadInvites() {
+    // We'll reload from server — for now derive from users list (invited users show invite info)
+    // Since invites.json isn't exposed directly, we just show a note
+    document.getElementById('invites-tbody').innerHTML =
+        '<tr><td colspan="4" class="invite-empty">Invite history is stored server-side.</td></tr>';
+}
+
+async function generateInvite() {
+    const r = await fetch('/api/invite/generate', { method:'POST' });
+    const d = await r.json();
+    if (!d.ok) { alert('Failed to generate invite: ' + d.error); return; }
+    document.getElementById('invite-link-text').textContent = d.url;
+    document.getElementById('copy-note').style.display = 'none';
+    document.getElementById('invite-modal').classList.add('open');
+}
+
+function copyLink() {
+    const text = document.getElementById('invite-link-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        document.getElementById('copy-note').style.display = 'block';
+    });
+}
+function closeInviteModal() {
+    document.getElementById('invite-modal').classList.remove('open');
+    loadUsers();
+}
+
+let pendingDelete = null;
+function askDelete(username) {
+    pendingDelete = username;
+    document.getElementById('confirm-text').textContent = `Remove "${username}"? They will lose admin access immediately.`;
+    document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+    pendingDelete = null;
+    document.getElementById('confirm-modal').classList.remove('open');
+}
+async function confirmDelete() {
+    if (!pendingDelete) return;
+    const r = await fetch(`/api/users/${pendingDelete}`, { method:'DELETE' });
+    const d = await r.json();
+    closeConfirm();
+    if (!d.ok) { alert('Failed: ' + d.error); return; }
+    loadUsers();
+}
+</script>
+</body>
+</html>

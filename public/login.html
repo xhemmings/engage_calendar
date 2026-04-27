@@ -6,251 +6,108 @@
     <title>Login — Engagement Calendar</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #eef0f3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            background: #1a1f36;
-            color: #fff;
-            padding: 18px 32px;
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef0f3; min-height: 100vh; display: flex; flex-direction: column; }
+        header { background: #1a1f36; color: #fff; padding: 18px 32px; }
         header h1 { font-size: 1.3rem; font-weight: 600; }
-
-        .page {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-        }
-        .card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .card h2 {
-            font-size: 1.4rem;
-            color: #1a1f36;
-            margin-bottom: 6px;
-        }
-        .card p {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 28px;
-        }
-        .field {
-            margin-bottom: 16px;
-        }
-        .field label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #444;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .field input {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1.5px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: border-color 0.15s;
-            outline: none;
-        }
-        .field input:focus { border-color: #1a1f36; }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: #1a1f36;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.15s;
-        }
+        .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+        .card { background: #fff; border-radius: 14px; box-shadow: 0 4px 28px rgba(0,0,0,0.1); padding: 44px 40px; width: 100%; max-width: 400px; }
+        .card h2 { font-size: 1.5rem; color: #1a1f36; margin-bottom: 6px; }
+        .card p { font-size: 0.9rem; color: #888; margin-bottom: 30px; }
+        .field { margin-bottom: 18px; }
+        .field label { display: block; font-size: 0.78rem; font-weight: 700; color: #555; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.6px; }
+        .field input { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 9px; font-size: 0.97rem; outline: none; transition: border-color 0.15s; background: #fafafa; }
+        .field input:focus { border-color: #1a1f36; background: #fff; }
+        .btn { width: 100%; padding: 13px; background: #1a1f36; color: #fff; border: none; border-radius: 9px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 6px; transition: background 0.15s; }
         .btn:hover { background: #2d3561; }
-        .btn:disabled { background: #aaa; cursor: default; }
-
-        .error {
-            background: #fdecea;
-            color: #b71c1c;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.88rem;
-            margin-bottom: 16px;
-            display: none;
-        }
-        .success-note {
-            background: #e8f5e9;
-            color: #1b5e20;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.88rem;
-            margin-bottom: 16px;
-            display: none;
-        }
-
+        .btn:disabled { background: #b0b0b0; cursor: default; }
+        .btn-ghost { background: #f0f0f0; color: #444; margin-top: 10px; }
+        .btn-ghost:hover { background: #e0e0e0; }
+        .error { background: #fdecea; color: #b71c1c; border-radius: 8px; padding: 11px 14px; font-size: 0.88rem; margin-bottom: 16px; display: none; }
         #step-otp { display: none; }
-
-        .whatsapp-icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 6px;
-            vertical-align: middle;
-            fill: #25D366;
-        }
-        .otp-hint {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .otp-hint svg { flex-shrink: 0; }
+        .wa-hint { display: flex; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 9px; padding: 12px 14px; margin-bottom: 22px; font-size: 0.87rem; color: #166534; }
+        .otp-input { text-align: center; letter-spacing: 8px; font-size: 1.5rem; font-weight: 700; }
     </style>
 </head>
 <body>
-<header>
-    <h1>Engagement Calendar 2026</h1>
-</header>
+<header><h1>Engagement Calendar 2026</h1></header>
 <div class="page">
-    <div class="card">
+  <div class="card">
 
-        <!-- Step 1: Credentials -->
-        <div id="step-credentials">
-            <h2>Admin Login</h2>
-            <p>Enter your credentials to continue.</p>
-            <div class="error" id="cred-error"></div>
-            <div class="field">
-                <label>Username</label>
-                <input type="text" id="username" autocomplete="username" />
-            </div>
-            <div class="field">
-                <label>Password</label>
-                <input type="password" id="password" autocomplete="current-password" />
-            </div>
-            <button class="btn" id="login-btn" onclick="submitCredentials()">Continue</button>
-        </div>
-
-        <!-- Step 2: OTP -->
-        <div id="step-otp">
-            <h2>Verify It's You</h2>
-            <div class="otp-hint">
-                <svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                A 6-digit code was sent to your WhatsApp.
-            </div>
-            <div class="error" id="otp-error"></div>
-            <div class="success-note" id="otp-success"></div>
-            <div class="field">
-                <label>Verification Code</label>
-                <input type="text" id="otp-input" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
-            </div>
-            <button class="btn" id="verify-btn" onclick="submitOtp()">Verify & Login</button>
-            <button class="btn" style="background:#eee;color:#333;margin-top:10px" onclick="backToCredentials()">Back</button>
-        </div>
-
+    <div id="step-credentials">
+      <h2>Welcome back</h2>
+      <p>Enter your username and we'll send a code to your WhatsApp.</p>
+      <div class="error" id="cred-error"></div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" autocomplete="username" placeholder="e.g. xavierh" />
+      </div>
+      <button class="btn" id="login-btn" onclick="submitUsername()">Send WhatsApp Code</button>
     </div>
+
+    <div id="step-otp">
+      <h2>Check WhatsApp</h2>
+      <div class="wa-hint">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="#22c55e"/></svg>
+        A 6-digit code was sent to your WhatsApp.
+      </div>
+      <div class="error" id="otp-error"></div>
+      <div class="field">
+        <label>Verification Code</label>
+        <input type="text" id="otp-input" class="otp-input" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+      </div>
+      <button class="btn" id="verify-btn" onclick="submitOtp()">Verify & Login</button>
+      <button class="btn btn-ghost" onclick="backToUsername()">&#8592; Back</button>
+    </div>
+
+  </div>
 </div>
 <script>
-    // Redirect if already logged in
-    fetch('/api/auth-status').then(r => r.json()).then(d => {
-        if (d.authenticated) window.location.href = '/admin.html';
-    });
+fetch('/api/auth-status').then(r=>r.json()).then(d => {
+    if (d.authenticated) window.location.href = d.role === 'superadmin' ? '/users.html' : '/admin.html';
+});
 
-    function showError(id, msg) {
-        const el = document.getElementById(id);
-        el.textContent = msg;
-        el.style.display = 'block';
-    }
-    function hideError(id) {
-        document.getElementById(id).style.display = 'none';
-    }
+document.getElementById('username').addEventListener('keydown', e => { if(e.key==='Enter') submitUsername(); });
+document.getElementById('otp-input').addEventListener('keydown', e => { if(e.key==='Enter') submitOtp(); });
 
-    document.getElementById('password').addEventListener('keydown', e => {
-        if (e.key === 'Enter') submitCredentials();
-    });
-    document.getElementById('otp-input') && document.getElementById('otp-input').addEventListener('keydown', e => {
-        if (e.key === 'Enter') submitOtp();
-    });
+function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+function hideErr(id) { document.getElementById(id).style.display='none'; }
 
-    async function submitCredentials() {
-        hideError('cred-error');
-        const btn = document.getElementById('login-btn');
-        btn.disabled = true;
-        btn.textContent = 'Sending code…';
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        try {
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                showError('cred-error', data.error || 'Login failed');
-                btn.disabled = false;
-                btn.textContent = 'Continue';
-                return;
-            }
-            document.getElementById('step-credentials').style.display = 'none';
-            document.getElementById('step-otp').style.display = 'block';
-            document.getElementById('otp-input').focus();
-        } catch {
-            showError('cred-error', 'Network error. Please try again.');
-            btn.disabled = false;
-            btn.textContent = 'Continue';
-        }
-    }
+async function submitUsername() {
+    hideErr('cred-error');
+    const btn = document.getElementById('login-btn');
+    const username = document.getElementById('username').value.trim();
+    if (!username) return;
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+        const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username }) });
+        const d = await r.json();
+        if (!r.ok) { showErr('cred-error', d.error || 'Login failed'); btn.disabled=false; btn.textContent='Send WhatsApp Code'; return; }
+        document.getElementById('step-credentials').style.display = 'none';
+        document.getElementById('step-otp').style.display = 'block';
+        document.getElementById('otp-input').focus();
+    } catch { showErr('cred-error', 'Network error.'); btn.disabled=false; btn.textContent='Send WhatsApp Code'; }
+}
 
-    async function submitOtp() {
-        hideError('otp-error');
-        const btn = document.getElementById('verify-btn');
-        btn.disabled = true;
-        btn.textContent = 'Verifying…';
-        const otp = document.getElementById('otp-input').value.trim();
-        try {
-            const res = await fetch('/api/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ otp })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                showError('otp-error', data.error || 'Verification failed');
-                btn.disabled = false;
-                btn.textContent = 'Verify & Login';
-                return;
-            }
-            window.location.href = '/admin.html';
-        } catch {
-            showError('otp-error', 'Network error. Please try again.');
-            btn.disabled = false;
-            btn.textContent = 'Verify & Login';
-        }
-    }
+async function submitOtp() {
+    hideErr('otp-error');
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    const otp = document.getElementById('otp-input').value.trim();
+    try {
+        const r = await fetch('/api/verify-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ otp }) });
+        const d = await r.json();
+        if (!r.ok) { showErr('otp-error', d.error || 'Verification failed'); btn.disabled=false; btn.textContent='Verify & Login'; return; }
+        window.location.href = d.role === 'superadmin' ? '/users.html' : '/admin.html';
+    } catch { showErr('otp-error', 'Network error.'); btn.disabled=false; btn.textContent='Verify & Login'; }
+}
 
-    function backToCredentials() {
-        document.getElementById('step-otp').style.display = 'none';
-        document.getElementById('step-credentials').style.display = 'block';
-        document.getElementById('login-btn').disabled = false;
-        document.getElementById('login-btn').textContent = 'Continue';
-    }
+function backToUsername() {
+    document.getElementById('step-otp').style.display='none';
+    document.getElementById('step-credentials').style.display='block';
+    document.getElementById('login-btn').disabled=false;
+    document.getElementById('login-btn').textContent='Send WhatsApp Code';
+    hideErr('otp-error');
+}
 </script>
 </body>
 </html>

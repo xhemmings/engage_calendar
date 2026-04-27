@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited — Engagement Calendar</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef0f3; min-height: 100vh; display: flex; flex-direction: column; }
+        header { background: #1a1f36; color: #fff; padding: 18px 32px; }
+        header h1 { font-size: 1.3rem; font-weight: 600; }
+        .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+        .card { background: #fff; border-radius: 14px; box-shadow: 0 4px 28px rgba(0,0,0,.1); padding: 44px 40px; width: 100%; max-width: 420px; }
+        .invite-badge { display: inline-flex; align-items: center; gap: 8px; background: #e8f5e9; color: #2e7d32; padding: 7px 14px; border-radius: 20px; font-size: .82rem; font-weight: 700; margin-bottom: 22px; }
+        .card h2 { font-size: 1.5rem; color: #1a1f36; margin-bottom: 8px; }
+        .card p { font-size: .9rem; color: #888; margin-bottom: 28px; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: .78rem; font-weight: 700; color: #555; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .6px; }
+        .field input { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 9px; font-size: .97rem; outline: none; transition: border-color .15s; background: #fafafa; }
+        .field input:focus { border-color: #1a1f36; background: #fff; }
+        .phone-hint { font-size: .78rem; color: #aaa; margin-top: 5px; }
+        .btn { width: 100%; padding: 13px; background: #1a1f36; color: #fff; border: none; border-radius: 9px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 6px; transition: background .15s; }
+        .btn:hover { background: #2d3561; }
+        .btn:disabled { background: #b0b0b0; cursor: default; }
+        .btn-ghost { background: #f0f0f0; color: #444; margin-top: 10px; }
+        .btn-ghost:hover { background: #e0e0e0; }
+        .error { background: #fdecea; color: #b71c1c; border-radius: 8px; padding: 11px 14px; font-size: .88rem; margin-bottom: 16px; display: none; }
+        .success { background: #e8f5e9; color: #1b5e20; border-radius: 8px; padding: 11px 14px; font-size: .88rem; margin-bottom: 16px; display: none; }
+        #step-otp, #step-done, #step-invalid { display: none; }
+        .wa-hint { display: flex; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 9px; padding: 12px 14px; margin-bottom: 22px; font-size: .87rem; color: #166534; }
+        .otp-input { text-align: center; letter-spacing: 8px; font-size: 1.5rem; font-weight: 700; }
+        .done-icon { font-size: 3rem; text-align: center; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<header><h1>Engagement Calendar 2026</h1></header>
+<div class="page">
+  <div class="card">
+
+    <!-- Invalid/expired -->
+    <div id="step-invalid">
+        <div class="done-icon">&#10060;</div>
+        <h2 style="text-align:center">Invalid Invite</h2>
+        <p style="text-align:center" id="invalid-msg">This invite link is invalid or has expired.</p>
+    </div>
+
+    <!-- Step 1: Enter details -->
+    <div id="step-details">
+        <div class="invite-badge">&#127775; You've been invited</div>
+        <h2>Create your account</h2>
+        <p>You've been invited to manage the Engagement Calendar. Enter your details to get started.</p>
+        <div class="error" id="details-error"></div>
+        <div class="field">
+            <label>Choose a Username</label>
+            <input type="text" id="username" autocomplete="username" placeholder="e.g. johnd" />
+        </div>
+        <div class="field">
+            <label>WhatsApp Phone Number</label>
+            <input type="tel" id="phone" placeholder="+1 876 000 0000" />
+            <div class="phone-hint">Include country code, e.g. +18761234567</div>
+        </div>
+        <button class="btn" id="claim-btn" onclick="submitClaim()">Send Verification Code</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="step-otp">
+        <div class="invite-badge">&#127775; Almost there</div>
+        <h2>Verify your number</h2>
+        <div class="wa-hint">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="#22c55e"/></svg>
+            A 6-digit code was sent to your WhatsApp.
+        </div>
+        <div class="error" id="otp-error"></div>
+        <div class="field">
+            <label>Verification Code</label>
+            <input type="text" id="otp-input" class="otp-input" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+        </div>
+        <button class="btn" id="verify-btn" onclick="submitVerify()">Verify & Create Account</button>
+        <button class="btn btn-ghost" onclick="backToDetails()">&#8592; Back</button>
+    </div>
+
+    <!-- Done -->
+    <div id="step-done">
+        <div class="done-icon">&#127881;</div>
+        <h2 style="text-align:center">You're in!</h2>
+        <p style="text-align:center;margin-bottom:24px">Your account has been created. Redirecting to the admin panel…</p>
+    </div>
+
+  </div>
+</div>
+<script>
+const token = new URLSearchParams(location.search).get('token');
+
+if (!token) {
+    show('step-invalid');
+    document.getElementById('invalid-msg').textContent = 'No invite token found in this URL.';
+} else {
+    fetch(`/api/invite/${token}`)
+        .then(r => r.json())
+        .then(d => {
+            if (!d.ok) { show('step-invalid'); document.getElementById('invalid-msg').textContent = d.error; }
+        })
+        .catch(() => show('step-invalid'));
+}
+
+function show(id) {
+    ['step-details','step-otp','step-done','step-invalid'].forEach(s => document.getElementById(s).style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+}
+
+function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+function hideErr(id) { document.getElementById(id).style.display='none'; }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('otp-input').addEventListener('keydown', e => { if(e.key==='Enter') submitVerify(); });
+});
+
+async function submitClaim() {
+    hideErr('details-error');
+    const username = document.getElementById('username').value.trim();
+    let phone = document.getElementById('phone').value.trim().replace(/\s/g,'');
+    if (!phone.startsWith('+')) phone = '+' + phone;
+    if (!username || !phone) { showErr('details-error','Both username and phone number are required.'); return; }
+    const btn = document.getElementById('claim-btn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+        const r = await fetch(`/api/invite/${token}/claim`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, phone }) });
+        const d = await r.json();
+        if (!r.ok) { showErr('details-error', d.error || 'Failed'); btn.disabled=false; btn.textContent='Send Verification Code'; return; }
+        show('step-otp');
+        document.getElementById('otp-input').focus();
+    } catch { showErr('details-error','Network error.'); btn.disabled=false; btn.textContent='Send Verification Code'; }
+}
+
+async function submitVerify() {
+    hideErr('otp-error');
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    const otp = document.getElementById('otp-input').value.trim();
+    try {
+        const r = await fetch(`/api/invite/${token}/verify`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ otp }) });
+        const d = await r.json();
+        if (!r.ok) { showErr('otp-error', d.error || 'Verification failed'); btn.disabled=false; btn.textContent='Verify & Create Account'; return; }
+        show('step-done');
+        setTimeout(() => window.location.href = '/admin.html', 2000);
+    } catch { showErr('otp-error','Network error.'); btn.disabled=false; btn.textContent='Verify & Create Account'; }
+}
+
+function backToDetails() { show('step-details'); document.getElementById('claim-btn').disabled=false; document.getElementById('claim-btn').textContent='Send Verification Code'; }
+</script>
+</body>
+</html>
