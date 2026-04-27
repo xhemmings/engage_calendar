@@ -99,17 +99,52 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-async function sendOTP(phone, otp) {
+async function sendWhatsAppOTP(phone, otp) {
   const sid   = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from  = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
-  if (!sid || !token) { console.log(`[DEV] OTP for ${phone}: ${otp}`); return; }
+  if (!sid || !token) { console.log(`[DEV] WhatsApp OTP for ${phone}: ${otp}`); return; }
   const twilio = require('twilio')(sid, token);
   await twilio.messages.create({
     body: `Your Engagement Calendar code: *${otp}*\nExpires in 5 minutes.`,
     from,
     to: `whatsapp:${phone}`,
   });
+}
+
+async function sendEmailOTP(email, otp) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) { console.log(`[DEV] Email OTP for ${email}: ${otp}`); return; }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Engagement Calendar <onboarding@resend.dev>',
+      to: [email],
+      subject: 'Your verification code',
+      html: `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:420px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px">
+        <div style="font-size:1.2rem;font-weight:700;color:#1a1f36;margin-bottom:8px">Engagement Calendar</div>
+        <p style="color:#555;margin-bottom:24px">Your verification code is:</p>
+        <div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1a1f36;padding:20px 24px;background:#eef0f3;border-radius:10px;text-align:center">${otp}</div>
+        <p style="color:#aaa;font-size:13px;margin-top:20px">Expires in 5 minutes. Do not share this code.</p>
+      </div>`,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Email send failed');
+  }
+}
+
+// Route OTP by role: superadmin → WhatsApp, everyone else → email
+async function sendOTP(user, otp) {
+  if (user.role === 'superadmin') {
+    await sendWhatsAppOTP(user.phone, otp);
+  } else {
+    if (!user.email) throw new Error('No email address on file for this user');
+    await sendEmailOTP(user.email, otp);
+  }
 }
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -130,11 +165,11 @@ app.post('/api/login', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
   if (!rows[0]) return res.status(401).json({ error: 'Username not found' });
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  try { await sendOTP(rows[0].phone, otp); }
-  catch (e) { console.error('WhatsApp error:', e.message); return res.status(500).json({ error: 'Failed to send code' }); }
+  try { await sendOTP(rows[0], otp); }
+  catch (e) { console.error('OTP send error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, role: rows[0].role }, JWT_SECRET, { expiresIn: '5m' });
   res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
-  res.json({ ok: true });
+  res.json({ ok: true, channel: rows[0].role === 'superadmin' ? 'whatsapp' : 'email' });
 });
 
 app.post('/api/verify-otp', (req, res) => {
@@ -202,8 +237,8 @@ app.post('/api/invite/:token/claim', async (req, res) => {
   const taken = await pool.query('SELECT 1 FROM users WHERE username=$1', [username]);
   if (taken.rowCount) return res.status(409).json({ error: 'Username already taken' });
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  try { await sendOTP(phone, otp); }
-  catch (e) { return res.status(500).json({ error: 'Failed to send verification code' }); }
+  try { await sendEmailOTP(email, otp); }
+  catch (e) { console.error('Invite OTP error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, phone, firstName, lastName, email, birthday: birthday||null, inviteToken: req.params.token, role: inv.invite_role }, JWT_SECRET, { expiresIn: '5m' });
   res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
   res.json({ ok: true });
