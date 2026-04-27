@@ -41,7 +41,8 @@
 
         .role-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; letter-spacing: .3px; }
         .role-superadmin { background: #e8eaf6; color: #3949ab; }
-        .role-admin { background: #e8f5e9; color: #2e7d32; }
+        .role-admin  { background: #e8f5e9; color: #2e7d32; }
+        .role-viewer { background: #fff8e1; color: #f57f17; }
 
         .btn-delete { padding: 6px 14px; background: #fdecea; color: #c62828; border: none; border-radius: 6px; font-size: .82rem; cursor: pointer; font-weight: 600; transition: background .15s; }
         .btn-delete:hover { background: #ffcdd2; }
@@ -102,9 +103,14 @@
             <h1>User Management</h1>
             <p>Manage admin access and invite new team members.</p>
         </div>
-        <button class="btn-primary" onclick="generateInvite()">
-            <span>&#43;</span> Generate Invite Link
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="generateInvite('viewer')" style="background:#2e7d32;">
+                <span>&#43;</span> Invite Viewer
+            </button>
+            <button class="btn-primary" onclick="generateInvite('admin')">
+                <span>&#43;</span> Invite Admin
+            </button>
+        </div>
     </div>
 
     <!-- Users table -->
@@ -146,7 +152,7 @@
 <div class="modal-overlay" id="invite-modal">
     <div class="modal">
         <h3>&#128279; Invite Link Ready</h3>
-        <p>Share this link to give someone admin access. It expires in 48 hours and can only be used once.</p>
+        <p id="invite-modal-desc">Share this link. It expires in 48 hours and can only be used once.</p>
         <div class="link-box">
             <span class="link-text" id="invite-link-text"></span>
             <button class="btn-copy" onclick="copyLink()">Copy</button>
@@ -210,7 +216,7 @@ async function loadUsers() {
                 </div>
             </td>
             <td>${formatPhone(u.phone)}</td>
-            <td><span class="role-badge role-${u.role}">${u.role === 'superadmin' ? '&#9733; Super Admin' : 'Admin'}</span></td>
+            <td><span class="role-badge role-${u.role}">${u.role === 'superadmin' ? '&#9733; Super Admin' : u.role === 'admin' ? 'Admin' : 'Viewer'}</span></td>
             <td>${formatDate(u.createdAt)}</td>
             <td>
                 ${username !== meUsername && u.role !== 'superadmin'
@@ -227,11 +233,14 @@ async function loadInvites() {
         '<tr><td colspan="4" class="invite-empty">Invite history is stored server-side.</td></tr>';
 }
 
-async function generateInvite() {
-    const r = await fetch('/api/invite/generate', { method:'POST' });
+async function generateInvite(role) {
+    const r = await fetch('/api/invite/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ role }) });
     const d = await r.json();
     if (!d.ok) { alert('Failed to generate invite: ' + d.error); return; }
     document.getElementById('invite-link-text').textContent = d.url;
+    document.getElementById('invite-modal-desc').textContent = role === 'admin'
+        ? 'Share this Admin invite link. The recipient will be able to edit the calendar. Expires in 48 hours, single use.'
+        : 'Share this Viewer invite link. The recipient can view, comment and react. Expires in 48 hours, single use.';
     document.getElementById('copy-note').style.display = 'none';
     document.getElementById('invite-modal').classList.add('open');
 }

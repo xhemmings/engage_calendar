@@ -435,7 +435,8 @@ let currentMonth = null;
 
 // ── Auth guard ──────────────────────────────────────────────────────────────
 fetch('/api/auth-status').then(r => r.json()).then(d => {
-    if (!d.authenticated) window.location.href = '/login.html';
+    if (!d.authenticated) { window.location.href = '/login.html'; return; }
+    if (!['admin','superadmin'].includes(d.role)) { window.location.href = '/calendar.html'; return; }
     if (d.role === 'superadmin') document.getElementById('nav-users').style.display = 'inline-block';
 });
 

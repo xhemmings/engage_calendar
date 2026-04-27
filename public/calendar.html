@@ -6,406 +6,286 @@
     <title>Engagement Calendar 2026</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef0f3; min-height: 100vh; display: flex; flex-direction: column; }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #eef0f3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        /* ── Nav ── */
+        header { background: #1a1f36; color: #fff; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 58px; position: sticky; top: 0; z-index: 100; }
+        header h1 { font-size: 1.1rem; font-weight: 700; }
+        .nav-links { display: flex; align-items: center; gap: 6px; }
+        .nav-link { color: #a0a8d0; text-decoration: none; font-size: .88rem; padding: 7px 14px; border-radius: 6px; transition: background .15s, color .15s; }
+        .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+        .nav-link.active { background: rgba(255,255,255,.15); color: #fff; }
+        .nav-btn-logout { background: rgba(229,57,53,.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,.3); padding: 7px 14px; border-radius: 6px; font-size: .88rem; cursor: pointer; }
+        .nav-btn-logout:hover { background: rgba(229,57,53,.4); color: #fff; }
 
-        /* ── Top bar ── */
-        header {
-            background: #1a1f36;
-            color: #fff;
-            padding: 18px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        header h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: 0.5px; }
-        header a {
-            color: #a0a8d0;
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
-        header a:hover { color: #fff; }
-
-        /* ── Three-column layout ── */
-        .layout {
-            display: grid;
-            grid-template-columns: 220px 1fr 220px;
-            gap: 0;
-            flex: 1;
-            padding: 28px 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
+        /* ── Layout ── */
+        .layout { display: grid; grid-template-columns: 200px 1fr 220px; gap: 0; flex: 1; padding: 28px 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
 
         /* ── Wells ── */
-        .well {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            padding: 20px 16px;
-            height: fit-content;
-            position: sticky;
-            top: 24px;
-        }
-        .well h3 {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            margin-bottom: 14px;
-        }
+        .well { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.07); padding: 20px 16px; height: fit-content; position: sticky; top: 82px; }
+        .well h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 14px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: .84rem; color: #444; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .legend-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+        .month-nav-link { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: #333; text-decoration: none; padding: 5px 7px; border-radius: 6px; transition: background .12s; margin-bottom: 2px; cursor: pointer; }
+        .month-nav-link:hover { background: #f0f0f0; }
+        .month-nav-link.active { background: #1a1f36; color: #fff; }
+        .month-nav-link.active .mnl-dot { background: #fff !important; }
+        .mnl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-        /* Left well – legend */
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-size: 0.85rem;
-            color: #444;
-        }
-        .legend-dot {
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .legend-swatch {
-            width: 12px; height: 12px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        /* Right well – upcoming events */
-        .upcoming-event {
-            padding: 7px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 0.82rem;
-        }
+        /* Right well */
+        .upcoming-event { padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: .82rem; cursor: pointer; }
         .upcoming-event:last-child { border-bottom: none; }
-        .upcoming-event .ev-date { color: #888; font-size: 0.75rem; margin-bottom: 2px; }
-        .upcoming-event .ev-name { color: #222; font-weight: 500; }
-        .upcoming-event .ev-dot {
-            display: inline-block;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
+        .upcoming-event:hover .ev-name { color: #1a1f36; }
+        .ev-date { color: #aaa; font-size: .74rem; margin-bottom: 1px; }
+        .ev-name  { color: #333; font-weight: 500; }
+        .ev-dot   { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
 
-        /* ── Main content ── */
-        .main {
-            padding: 0 24px;
-        }
+        /* ── Main ── */
+        .main { padding: 0 24px; min-width: 0; }
+        .months-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
 
-        .months-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        /* ── Month card (collapsed) ── */
-        .month-card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .month-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        }
-        .month-card.active {
-            outline: 3px solid #1a1f36;
-        }
-        .card-header {
-            padding: 12px 14px;
-            color: #fff;
-            font-weight: 700;
-            font-size: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .card-header .chevron {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            transition: transform 0.2s;
-        }
+        /* ── Month card ── */
+        .month-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.08); overflow: hidden; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+        .month-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+        .month-card.active { outline: 3px solid #1a1f36; }
+        .card-header { padding: 12px 14px; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .chevron { font-size: .7rem; opacity: .8; transition: transform .2s; }
         .month-card.active .chevron { transform: rotate(180deg); }
         .card-body { padding: 10px 14px 12px; }
-        .card-event-count {
-            font-size: 0.78rem;
-            color: #888;
-            margin-bottom: 6px;
-        }
-        .card-dots {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .card-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #ccc;
-        }
+        .card-event-count { font-size: .76rem; color: #aaa; margin-bottom: 6px; }
+        .card-dots { display: flex; flex-wrap: wrap; gap: 4px; }
+        .card-dot { width: 8px; height: 8px; border-radius: 50%; }
         .card-dot.holiday { background: #d32f2f; }
         .card-dot.normal  { background: #90a4ae; }
 
-        /* ── Expanded month view ── */
-        .expanded-panel {
-            display: none;
-            grid-column: 1 / -1;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            overflow: hidden;
-            margin-top: 4px;
-        }
+        /* ── Expanded panel ── */
+        .expanded-panel { display: none; grid-column: 1 / -1; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); overflow: hidden; margin-top: 4px; }
         .expanded-panel.open { display: block; }
 
-        .exp-header {
-            padding: 16px 24px;
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: 700;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .exp-close {
-            background: rgba(255,255,255,0.25);
-            border: none;
-            color: #fff;
-            border-radius: 50%;
-            width: 28px; height: 28px;
-            font-size: 1rem;
-            cursor: pointer;
-            line-height: 28px;
-            text-align: center;
-        }
-        .exp-close:hover { background: rgba(255,255,255,0.4); }
+        .exp-header { padding: 14px 20px; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .exp-nav { display: flex; align-items: center; gap: 10px; }
+        .exp-nav-btn { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
+        .exp-nav-btn:hover { background: rgba(255,255,255,.35); }
+        .exp-nav-btn:disabled { opacity: .3; cursor: default; }
+        .exp-title { font-size: 1.1rem; font-weight: 700; }
+        .exp-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .exp-close:hover { background: rgba(255,255,255,.35); }
 
-        .cal-grid-wrap { padding: 20px 24px 24px; }
-
-        /* Calendar grid */
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
-        .cal-day-name {
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #aaa;
-            text-transform: uppercase;
-            padding-bottom: 6px;
-        }
-        .cal-cell {
-            min-height: 64px;
-            border-radius: 8px;
-            padding: 6px 8px;
-            background: #f8f9fa;
-            font-size: 0.85rem;
-            position: relative;
-        }
-        .cal-cell.empty { background: transparent; }
+        /* ── Calendar grid ── */
+        .cal-wrap { display: flex; gap: 0; }
+        .cal-grid-section { flex: 1; padding: 20px; min-width: 0; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+        .cal-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #bbb; text-transform: uppercase; padding-bottom: 5px; }
+        .cal-cell { min-height: 70px; border-radius: 8px; padding: 6px 7px; background: #f8f9fa; font-size: .82rem; position: relative; transition: background .12s; }
+        .cal-cell.empty { background: transparent; box-shadow: none; }
         .cal-cell.weekend { background: #f0f0f0; }
-        .cal-cell.has-event { background: #e8f5e9; cursor: default; }
+        .cal-cell.has-event { background: #e8f5e9; }
         .cal-cell.has-holiday { background: #fdecea; }
-        .cal-cell .cell-num {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.9rem;
-        }
-        .cal-cell.today .cell-num {
-            background: #1a1f36;
-            color: #fff;
-            border-radius: 50%;
-            width: 24px; height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .cal-cell .cell-events { margin-top: 4px; }
-        .cell-ev-tag {
-            display: block;
-            font-size: 0.72rem;
-            color: #444;
-            background: rgba(0,0,0,0.07);
-            border-radius: 4px;
-            padding: 1px 4px;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .cell-ev-tag.holiday {
-            background: #ffcdd2;
-            color: #b71c1c;
-            font-weight: 600;
-        }
+        .cal-cell.today .cell-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+        .cal-cell.clickable { cursor: pointer; }
+        .cal-cell.clickable:hover { filter: brightness(.96); }
+        .cal-cell.selected { outline: 2px solid #1a1f36; }
+        .cell-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
+        .cell-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.06); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cell-ev-tag.holiday { background: #ffcdd2; color: #b71c1c; font-weight: 600; }
+        .cell-reactions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+        .cell-rxn { font-size: .65rem; color: #888; display: flex; align-items: center; gap: 2px; }
 
-        /* Responsive */
-        @media (max-width: 900px) {
-            .layout { grid-template-columns: 1fr; }
-            .well { display: none; }
-            .main { padding: 0; }
-        }
+        /* ── Feedback panel ── */
+        .feedback-panel { width: 320px; flex-shrink: 0; border-left: 1px solid #eee; display: none; flex-direction: column; max-height: 540px; }
+        .feedback-panel.open { display: flex; }
+        .fp-header { padding: 16px 16px 12px; border-bottom: 1px solid #eee; }
+        .fp-event-name { font-weight: 700; color: #1a1f36; font-size: .95rem; margin-bottom: 4px; }
+        .fp-event-date { font-size: .78rem; color: #aaa; }
+        .fp-reactions { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #eee; }
+        .rxn-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1.5px solid #eee; background: #fff; cursor: pointer; font-size: .88rem; font-weight: 600; color: #555; transition: all .15s; flex: 1; justify-content: center; }
+        .rxn-btn:hover { border-color: #bbb; }
+        .rxn-btn.liked    { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
+        .rxn-btn.disliked { background: #fdecea; border-color: #ef5350; color: #c62828; }
+        .rxn-btn .count { font-size: .82rem; }
+        .fp-login-prompt { padding: 16px; font-size: .84rem; color: #888; text-align: center; }
+        .fp-login-prompt a { color: #1a1f36; font-weight: 600; text-decoration: none; }
+        .fp-comments { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .comment-item { background: #f8f9fa; border-radius: 8px; padding: 10px 12px; }
+        .comment-meta { font-size: .74rem; color: #aaa; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .comment-author { font-weight: 600; color: #555; }
+        .comment-body { font-size: .86rem; color: #333; line-height: 1.5; }
+        .comment-del { background: none; border: none; color: #ddd; cursor: pointer; font-size: .8rem; padding: 2px 4px; }
+        .comment-del:hover { color: #e53935; }
+        .fp-no-comments { font-size: .84rem; color: #ccc; text-align: center; padding: 20px 0; }
+        .fp-compose { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 8px; }
+        .fp-compose textarea { flex: 1; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 8px 10px; font-size: .85rem; resize: none; outline: none; font-family: inherit; height: 60px; transition: border-color .15s; }
+        .fp-compose textarea:focus { border-color: #1a1f36; }
+        .fp-send { padding: 8px 14px; background: #1a1f36; color: #fff; border: none; border-radius: 8px; font-size: .82rem; cursor: pointer; align-self: flex-end; }
+        .fp-send:hover { background: #2d3561; }
+        .bookmark-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 4px; color: #ccc; transition: color .15s; }
+        .bookmark-btn.bookmarked { color: #ff9800; }
+
+        /* Bookmarks in right well */
+        .bookmark-item { padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: .81rem; color: #555; cursor: pointer; }
+        .bookmark-item:last-child { border-bottom: none; }
+        .bookmark-item:hover { color: #1a1f36; }
+
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .well { display: none; } .main { padding: 0; } .feedback-panel { width: 100%; border-left: none; border-top: 1px solid #eee; max-height: 400px; } }
     </style>
 </head>
 <body>
 
 <header>
     <h1>Engagement Calendar 2026</h1>
-    <div style="display:flex;align-items:center;gap:6px;">
-        <a href="/calendar.html" style="color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;background:rgba(255,255,255,0.15);color:#fff;">&#128197; View Calendar</a>
-        <a href="/admin.html" id="nav-admin" style="color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;transition:background .15s">&#9998; Admin</a>
-        <a href="/login.html" id="nav-login" style="display:none;color:#a0a8d0;text-decoration:none;font-size:.88rem;padding:7px 14px;border-radius:6px;transition:background .15s">Login</a>
+    <div class="nav-links">
+        <a href="/calendar.html" class="nav-link active">&#128197; Calendar</a>
+        <a href="/admin.html" class="nav-link" id="nav-admin" style="display:none">&#9998; Admin</a>
+        <a href="/users.html" class="nav-link" id="nav-users" style="display:none">&#128100; Users</a>
+        <a href="/login.html" class="nav-link" id="nav-login">Login</a>
+        <button class="nav-btn-logout" id="nav-logout" style="display:none" onclick="logout()">Logout</button>
     </div>
 </header>
-<script>
-fetch('/api/auth-status').then(r=>r.json()).then(d=>{
-    document.getElementById('nav-login').style.display = d.authenticated ? 'none' : 'inline-block';
-    document.getElementById('nav-admin').style.color = d.authenticated ? '#fff' : '#a0a8d0';
-});
-</script>
 
 <div class="layout">
-    <!-- Left well: legend -->
     <aside class="well" id="left-well">
         <h3>Legend</h3>
-        <div class="legend-item">
-            <div class="legend-dot" style="background:#d32f2f;"></div>
-            Public Holiday
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background:#90a4ae;"></div>
-            Event
-        </div>
-        <div class="legend-item">
-            <div class="legend-swatch" style="background:#fdecea;border:1px solid #eee;"></div>
-            Holiday day
-        </div>
-        <div class="legend-item">
-            <div class="legend-swatch" style="background:#f0f0f0;border:1px solid #eee;"></div>
-            Weekend
-        </div>
-        <div class="legend-item">
-            <div class="legend-swatch" style="background:#e8f5e9;border:1px solid #eee;"></div>
-            Event day
-        </div>
-        <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
+        <div class="legend-item"><div class="legend-dot" style="background:#d32f2f"></div>Public Holiday</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#90a4ae"></div>Event</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#fdecea;border:1px solid #eee"></div>Holiday day</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f0f0f0;border:1px solid #eee"></div>Weekend</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#e8f5e9;border:1px solid #eee"></div>Event day</div>
+        <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
         <h3>Months</h3>
-        <div id="month-nav" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="month-nav"></div>
     </aside>
 
-    <!-- Main grid -->
     <main class="main">
         <div class="months-grid" id="months-grid"></div>
     </main>
 
-    <!-- Right well: upcoming events -->
     <aside class="well" id="right-well">
         <h3>All Events</h3>
         <div id="upcoming-list"></div>
+        <div id="bookmarks-section" style="display:none">
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+            <h3>My Bookmarks</h3>
+            <div id="bookmarks-list"></div>
+        </div>
     </aside>
 </div>
 
 <script>
-let calendarData = {};
-let activeMonth = null;
-let expandedEl = null;
+let calendarData  = {};
+let monthKeys     = [];
+let activeMonth   = null;
+let expandedEl    = null;
+let me            = null; // { username, role }
+let activeFeedbackKey = null;
 
 const TODAY = new Date();
 
-function isHoliday(ev) {
-    return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day');
+// ── Auth check ────────────────────────────────────────────────────────────────
+fetch('/api/auth-status').then(r=>r.json()).then(d => {
+    if (d.authenticated) {
+        me = { username: d.username, role: d.role };
+        document.getElementById('nav-login').style.display   = 'none';
+        document.getElementById('nav-logout').style.display  = 'inline-block';
+        if (['admin','superadmin'].includes(d.role)) document.getElementById('nav-admin').style.display = 'inline-block';
+        if (d.role === 'superadmin') document.getElementById('nav-users').style.display = 'inline-block';
+        loadBookmarks();
+    }
+});
+
+async function logout() {
+    await fetch('/api/logout', { method:'POST' });
+    location.href = '/login.html';
 }
 
-function formatShort(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isHoliday(ev) { return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day'); }
+function formatShort(dateStr) { const d=new Date(dateStr+'T00:00:00'); return d.toLocaleString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}); }
+function ordinal(n) { const s=["th","st","nd","rd"],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+function getDateRange(events) {
+    if (!events?.length) return '';
+    const days = events.map(e => new Date(e.date+'T00:00:00').getDate());
+    return `${ordinal(Math.min(...days))} – ${ordinal(Math.max(...days))}`;
+}
+function eventKey(ev) { return ev.date; }
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+async function loadData() {
+    const r = await fetch('/api/calendar');
+    calendarData = await r.json();
+    monthKeys = Object.keys(calendarData);
+    buildGrid(); buildUpcoming(); buildMonthNav();
 }
 
-// ── Right well: all events list ──
-function buildUpcoming() {
-    const list = document.getElementById('upcoming-list');
-    list.innerHTML = '';
-    const all = [];
-    Object.keys(calendarData).forEach(month => {
-        const color = calendarData[month].color || '#007bff';
-        (calendarData[month].events || []).forEach(ev => all.push({ ...ev, color, month }));
-    });
-    all.sort((a, b) => a.date.localeCompare(b.date));
-    all.forEach(ev => {
-        const div = document.createElement('div');
-        div.className = 'upcoming-event';
-        div.innerHTML = `
-            <div class="ev-date">${formatShort(ev.date)}</div>
-            <div class="ev-name">
-                <span class="ev-dot" style="background:${isHoliday(ev) ? '#d32f2f' : ev.color}"></span>${ev.name}
-            </div>`;
-        div.style.cursor = 'pointer';
-        div.addEventListener('click', () => openMonth(ev.month));
-        list.appendChild(div);
-    });
+async function loadBookmarks() {
+    const r = await fetch('/api/me/bookmarks');
+    if (!r.ok) return;
+    const bms = await r.json();
+    const sec = document.getElementById('bookmarks-section');
+    const list = document.getElementById('bookmarks-list');
+    if (!bms.length) { sec.style.display='none'; return; }
+    sec.style.display = 'block';
+    list.innerHTML = bms.map(b => {
+        const date = b.event_key;
+        return `<div class="bookmark-item" onclick="jumpToDate('${date}')">${formatShort(date)}</div>`;
+    }).join('');
 }
 
-// ── Left well: month nav links ──
+function jumpToDate(date) {
+    const month = Object.keys(calendarData).find(m =>
+        (calendarData[m].events||[]).some(e => e.date === date)
+    );
+    if (month) openMonth(month, date);
+}
+
+// ── Left well month nav ───────────────────────────────────────────────────────
 function buildMonthNav() {
     const nav = document.getElementById('month-nav');
-    nav.innerHTML = '';
-    Object.keys(calendarData).forEach(month => {
+    nav.innerHTML = monthKeys.map(month => {
         const color = calendarData[month].color || '#007bff';
-        const a = document.createElement('a');
-        a.href = '#';
-        a.style.cssText = `display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#333;text-decoration:none;padding:4px 6px;border-radius:6px;transition:background 0.1s`;
-        a.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>${month}`;
-        a.addEventListener('click', e => { e.preventDefault(); openMonth(month); });
-        a.addEventListener('mouseenter', () => a.style.background = '#f0f0f0');
-        a.addEventListener('mouseleave', () => a.style.background = 'transparent');
-        nav.appendChild(a);
-    });
+        return `<div class="month-nav-link" id="mnl-${month}" onclick="openMonth('${month}')">
+            <span class="mnl-dot" style="background:${color}"></span>${month}
+        </div>`;
+    }).join('');
 }
 
-// ── Build collapsed month cards ──
+// ── Right well all events ─────────────────────────────────────────────────────
+function buildUpcoming() {
+    const list = document.getElementById('upcoming-list');
+    const all = [];
+    monthKeys.forEach(m => {
+        const color = calendarData[m].color||'#007bff';
+        (calendarData[m].events||[]).forEach(ev => all.push({...ev, color, month: m}));
+    });
+    all.sort((a,b) => a.date.localeCompare(b.date));
+    list.innerHTML = all.map(ev => `
+        <div class="upcoming-event" onclick="openMonth('${ev.month}','${ev.date}')">
+            <div class="ev-date">${formatShort(ev.date)}</div>
+            <div class="ev-name"><span class="ev-dot" style="background:${isHoliday(ev)?'#d32f2f':ev.color}"></span>${ev.name}</div>
+        </div>`).join('');
+}
+
+// ── Month cards grid ──────────────────────────────────────────────────────────
 function buildGrid() {
     const grid = document.getElementById('months-grid');
     grid.innerHTML = '';
-
-    Object.keys(calendarData).forEach((month, idx) => {
-        const data = calendarData[month];
+    monthKeys.forEach(month => {
+        const data   = calendarData[month];
         const events = data.events || [];
-
-        // Card
-        const card = document.createElement('div');
+        const card   = document.createElement('div');
         card.className = 'month-card';
         card.id = `card-${month}`;
         card.innerHTML = `
-            <div class="card-header" style="background:${data.color || '#007bff'}">
-                <span>${month}</span>
-                <span class="chevron">&#9660;</span>
+            <div class="card-header" style="background:${data.color||'#007bff'}">
+                <span>${month}</span><span class="chevron">&#9660;</span>
             </div>
             <div class="card-body">
-                <div class="card-event-count">${events.length} event${events.length !== 1 ? 's' : ''}</div>
-                <div class="card-dots">${events.map(ev =>
-                    `<div class="card-dot ${isHoliday(ev) ? 'holiday' : 'normal'}" title="${ev.name}"></div>`
-                ).join('')}</div>
+                <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
+                <div class="card-dots">${events.map(ev=>`<div class="card-dot ${isHoliday(ev)?'holiday':'normal'}" title="${ev.name}"></div>`).join('')}</div>
             </div>`;
-        card.addEventListener('click', () => toggleMonth(month, card));
+        card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
 
-        // Expanded panel placeholder (inserted after card's row)
         const panel = document.createElement('div');
         panel.className = 'expanded-panel';
         panel.id = `panel-${month}`;
@@ -413,28 +293,31 @@ function buildGrid() {
     });
 }
 
-function toggleMonth(month, card) {
-    if (activeMonth === month) {
-        closeExpanded();
-        return;
-    }
+// ── Expand/navigate ───────────────────────────────────────────────────────────
+function toggleMonth(month) {
+    if (activeMonth === month) { closeExpanded(); return; }
     openMonth(month);
 }
 
-function openMonth(month) {
-    closeExpanded();
-
-    const card = document.getElementById(`card-${month}`);
-    const panel = document.getElementById(`panel-${month}`);
-    const data = calendarData[month];
-
-    card.classList.add('active');
-    panel.classList.add('open');
-    panel.innerHTML = buildExpandedHTML(month, data);
-    panel.querySelector('.exp-close').addEventListener('click', closeExpanded);
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+function openMonth(month, highlightDate = null) {
+    if (activeMonth === month && !highlightDate) { closeExpanded(); return; }
+    if (activeMonth && activeMonth !== month) {
+        document.getElementById(`card-${activeMonth}`)?.classList.remove('active');
+        document.getElementById(`panel-${activeMonth}`)?.classList.remove('open');
+        document.getElementById(`panel-${activeMonth}`).innerHTML = '';
+        document.getElementById(`mnl-${activeMonth}`)?.classList.remove('active');
+    }
 
     activeMonth = month;
+    const card  = document.getElementById(`card-${month}`);
+    const panel = document.getElementById(`panel-${month}`);
+
+    card.classList.add('active');
+    document.getElementById(`mnl-${month}`)?.classList.add('active');
+    renderExpandedPanel(panel, month, highlightDate);
+    panel.classList.add('open');
+
+    if (!highlightDate) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     expandedEl = { card, panel };
 }
 
@@ -443,83 +326,246 @@ function closeExpanded() {
     expandedEl.card.classList.remove('active');
     expandedEl.panel.classList.remove('open');
     expandedEl.panel.innerHTML = '';
-    activeMonth = null;
-    expandedEl = null;
+    document.getElementById(`mnl-${activeMonth}`)?.classList.remove('active');
+    activeMonth = null; expandedEl = null; activeFeedbackKey = null;
 }
 
-// ── Build full-month calendar grid HTML ──
-function buildExpandedHTML(monthName, data) {
+function navigateMonth(dir) {
+    const idx = monthKeys.indexOf(activeMonth);
+    const next = monthKeys[idx + dir];
+    if (next) openMonth(next);
+}
+
+// ── Render expanded panel ─────────────────────────────────────────────────────
+function renderExpandedPanel(panel, month, highlightDate) {
+    const data   = calendarData[month];
     const events = data.events || [];
+    const idx    = monthKeys.indexOf(month);
+    const color  = data.color || '#007bff';
+
+    const firstDate = events[0] ? new Date(events[0].date+'T00:00:00') : new Date();
+    const year      = events[0] ? parseInt(events[0].date.split('-')[0]) : TODAY.getFullYear();
+    const monthIdx  = events[0] ? parseInt(events[0].date.split('-')[1])-1 : TODAY.getMonth();
+    const daysInMonth = new Date(year, monthIdx+1, 0).getDate();
+    const firstDow    = new Date(year, monthIdx, 1).getDay();
+
     const eventMap = {};
     events.forEach(ev => {
-        const day = parseInt(ev.date.split('-')[2], 10);
-        if (!eventMap[day]) eventMap[day] = [];
-        eventMap[day].push(ev);
+        const d = parseInt(ev.date.split('-')[2]);
+        if (!eventMap[d]) eventMap[d] = [];
+        eventMap[d].push(ev);
     });
 
-    // Determine year and month index from first event date
-    const firstDate = events[0] ? new Date(events[0].date + 'T00:00:00') : new Date();
-    const year = events[0] ? parseInt(events[0].date.split('-')[0], 10) : TODAY.getFullYear();
-    const monthIdx = events[0] ? parseInt(events[0].date.split('-')[1], 10) - 1 : TODAY.getMonth();
-
-    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-    const firstDow = new Date(year, monthIdx, 1).getDay(); // 0=Sun
-
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    let cells = '';
+    let cells = dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+    for (let i=0; i<firstDow; i++) cells += `<div class="cal-cell empty"></div>`;
 
-    // Day name headers
-    dayNames.forEach(d => { cells += `<div class="cal-day-name">${d}</div>`; });
-
-    // Empty leading cells
-    for (let i = 0; i < firstDow; i++) cells += `<div class="cal-cell empty"></div>`;
-
-    // Day cells
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dow = (firstDow + d - 1) % 7;
-        const isWeekend = dow === 0 || dow === 6;
-        const dayEvents = eventMap[d] || [];
-        const hasHol = dayEvents.some(ev => isHoliday(ev));
-        const hasEv  = dayEvents.length > 0;
-        const isToday = (TODAY.getFullYear() === year && TODAY.getMonth() === monthIdx && TODAY.getDate() === d);
+    for (let d=1; d<=daysInMonth; d++) {
+        const dow      = (firstDow+d-1)%7;
+        const isWknd   = dow===0||dow===6;
+        const dayEvs   = eventMap[d]||[];
+        const hasHol   = dayEvs.some(ev => isHoliday(ev));
+        const hasEv    = dayEvs.length>0;
+        const dateStr  = `${year}-${String(monthIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isTdy    = TODAY.getFullYear()===year && TODAY.getMonth()===monthIdx && TODAY.getDate()===d;
+        const isHl     = dateStr === highlightDate;
 
         let cls = 'cal-cell';
-        if (isWeekend) cls += ' weekend';
-        if (hasHol)    cls += ' has-holiday';
+        if (isWknd) cls += ' weekend';
+        if (hasHol) cls += ' has-holiday';
         else if (hasEv) cls += ' has-event';
-        if (isToday)   cls += ' today';
+        if (isTdy)  cls += ' today';
+        if (hasEv)  cls += ' clickable';
+        if (isHl)   cls += ' selected';
 
-        const evTags = dayEvents.map(ev =>
-            `<span class="cell-ev-tag ${isHoliday(ev) ? 'holiday' : ''}">${ev.name}</span>`
+        const evTags = dayEvs.map(ev =>
+            `<span class="cell-ev-tag ${isHoliday(ev)?'holiday':''}">${ev.name}</span>`
         ).join('');
 
-        cells += `<div class="${cls}">
+        const rxnBar = hasEv ? `<div class="cell-reactions" id="rxns-${dateStr}"></div>` : '';
+
+        cells += `<div class="${cls}" id="cell-${dateStr}" ${hasEv?`onclick="openFeedback('${dateStr}',this)"`:''}>
             <div class="cell-num">${d}</div>
             <div class="cell-events">${evTags}</div>
+            ${rxnBar}
         </div>`;
     }
 
-    return `
-        <div class="exp-header" style="background:${data.color || '#007bff'}">
-            <span>${monthName} ${year}</span>
-            <button class="exp-close" title="Close">&#x2715;</button>
+    panel.innerHTML = `
+        <div class="exp-header" style="background:${color}">
+            <div class="exp-nav">
+                <button class="exp-nav-btn" onclick="navigateMonth(-1)" ${idx===0?'disabled':''} title="Previous month">&#8592;</button>
+                <span class="exp-title">${month} ${year}</span>
+                <button class="exp-nav-btn" onclick="navigateMonth(1)" ${idx===monthKeys.length-1?'disabled':''} title="Next month">&#8594;</button>
+            </div>
+            <span style="font-size:.82rem;opacity:.7">${getDateRange(events)}</span>
+            <button class="exp-close" onclick="closeExpanded()">&#x2715;</button>
         </div>
-        <div class="cal-grid-wrap">
-            <div class="cal-grid">${cells}</div>
+        <div class="cal-wrap">
+            <div class="cal-grid-section">
+                <div class="cal-grid">${cells}</div>
+            </div>
+            <div class="feedback-panel" id="feedback-panel"></div>
         </div>`;
+
+    // Load reaction counts for all event days
+    events.forEach(ev => loadCellReactions(ev.date));
+
+    if (highlightDate && eventMap[parseInt(highlightDate.split('-')[2])]) {
+        setTimeout(() => {
+            const cell = document.getElementById(`cell-${highlightDate}`);
+            if (cell) openFeedback(highlightDate, cell);
+        }, 50);
+    }
 }
 
-fetch('/api/calendar')
-    .then(r => r.json())
-    .then(data => {
-        calendarData = data;
-        buildGrid();
-        buildUpcoming();
-        buildMonthNav();
-    })
-    .catch(() => {
-        document.getElementById('months-grid').textContent = 'Error loading calendar data.';
+// ── Load cell reaction counts ─────────────────────────────────────────────────
+async function loadCellReactions(dateStr) {
+    const el = document.getElementById(`rxns-${dateStr}`);
+    if (!el) return;
+    try {
+        const r = await fetch(`/api/events/${encodeURIComponent(dateStr)}/feedback`);
+        const d = await r.json();
+        el.innerHTML = '';
+        if (d.reactions.like)    el.innerHTML += `<span class="cell-rxn">👍 ${d.reactions.like}</span>`;
+        if (d.reactions.dislike) el.innerHTML += `<span class="cell-rxn">👎 ${d.reactions.dislike}</span>`;
+        if (d.comments.length)   el.innerHTML += `<span class="cell-rxn">💬 ${d.comments.length}</span>`;
+    } catch {}
+}
+
+// ── Feedback panel ────────────────────────────────────────────────────────────
+async function openFeedback(dateStr, cellEl) {
+    // Deselect previous
+    if (activeFeedbackKey) document.getElementById(`cell-${activeFeedbackKey}`)?.classList.remove('selected');
+    activeFeedbackKey = dateStr;
+    cellEl.classList.add('selected');
+
+    const fp = document.getElementById('feedback-panel');
+    fp.className = 'feedback-panel open';
+    fp.innerHTML = '<div style="padding:20px;color:#bbb;font-size:.88rem">Loading…</div>';
+
+    const evs  = calendarData[activeMonth]?.events?.filter(e => e.date === dateStr) || [];
+    const evNames = evs.map(e=>e.name).join(', ') || 'Event';
+
+    try {
+        const r = await fetch(`/api/events/${encodeURIComponent(dateStr)}/feedback`);
+        const d = await r.json();
+        renderFeedbackPanel(fp, dateStr, evNames, d);
+    } catch { fp.innerHTML = '<div style="padding:20px;color:#e53935">Failed to load feedback.</div>'; }
+}
+
+function renderFeedbackPanel(fp, dateStr, evNames, data) {
+    const canInteract = !!me;
+    const likedClass    = data.userReaction==='like'    ? 'liked'    : '';
+    const dislikedClass = data.userReaction==='dislike' ? 'disliked' : '';
+    const bmClass = data.bookmarked ? 'bookmarked' : '';
+
+    fp.innerHTML = `
+        <div class="fp-header">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                    <div class="fp-event-name">${evNames}</div>
+                    <div class="fp-event-date">${formatShort(dateStr)}</div>
+                </div>
+                ${canInteract ? `<button class="bookmark-btn ${bmClass}" id="bm-btn-${dateStr}" onclick="toggleBookmark('${dateStr}')" title="Bookmark">&#128278;</button>` : ''}
+            </div>
+        </div>
+        <div class="fp-reactions">
+            ${canInteract
+                ? `<button class="rxn-btn ${likedClass}" id="like-btn" onclick="react('${dateStr}','like')">👍 <span class="count" id="like-count">${data.reactions.like}</span></button>
+                   <button class="rxn-btn ${dislikedClass}" id="dislike-btn" onclick="react('${dateStr}','dislike')">👎 <span class="count" id="dislike-count">${data.reactions.dislike}</span></button>`
+                : `<span style="font-size:.82rem;color:#aaa">👍 ${data.reactions.like}</span>
+                   <span style="font-size:.82rem;color:#aaa">👎 ${data.reactions.dislike}</span>`}
+        </div>
+        <div class="fp-comments" id="fp-comments-${dateStr}">
+            ${renderComments(data.comments, dateStr)}
+        </div>
+        ${canInteract
+            ? `<div class="fp-compose">
+                   <textarea id="comment-input" placeholder="Leave a comment…"></textarea>
+                   <button class="fp-send" onclick="postComment('${dateStr}')">Send</button>
+               </div>`
+            : `<div class="fp-login-prompt"><a href="/login.html">Login</a> to react and leave comments</div>`}`;
+}
+
+function renderComments(comments, dateStr) {
+    if (!comments.length) return '<div class="fp-no-comments">No comments yet. Be the first!</div>';
+    return comments.map(c => {
+        const author = c.first_name ? `${c.first_name} ${c.last_name}` : c.username;
+        const canDel = me && (me.username===c.username || ['admin','superadmin'].includes(me.role));
+        return `<div class="comment-item" id="comment-${c.id}">
+            <div class="comment-meta">
+                <span class="comment-author">${author}</span>
+                <span style="display:flex;align-items:center;gap:4px">
+                    <span>${new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+                    ${canDel ? `<button class="comment-del" onclick="deleteComment('${dateStr}',${c.id})">✕</button>` : ''}
+                </span>
+            </div>
+            <div class="comment-body">${escHtml(c.body)}</div>
+        </div>`;
+    }).join('');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function react(dateStr, reaction) {
+    if (!me) return;
+    const r = await fetch(`/api/events/${encodeURIComponent(dateStr)}/react`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reaction })
     });
+    const d = await r.json();
+    document.getElementById('like-count').textContent    = d.reactions.like;
+    document.getElementById('dislike-count').textContent = d.reactions.dislike;
+    // Refresh to get updated userReaction
+    const fb = await fetch(`/api/events/${encodeURIComponent(dateStr)}/feedback`);
+    const fd = await fb.json();
+    document.getElementById('like-btn').className    = `rxn-btn ${fd.userReaction==='like'?'liked':''}`;
+    document.getElementById('dislike-btn').className = `rxn-btn ${fd.userReaction==='dislike'?'disliked':''}`;
+    loadCellReactions(dateStr);
+}
+
+async function postComment(dateStr) {
+    const ta   = document.getElementById('comment-input');
+    const body = ta.value.trim();
+    if (!body) return;
+    ta.value = '';
+    const r = await fetch(`/api/events/${encodeURIComponent(dateStr)}/comments`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ body })
+    });
+    const d = await r.json();
+    if (d.ok) {
+        const container = document.getElementById(`fp-comments-${dateStr}`);
+        if (container.querySelector('.fp-no-comments')) container.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'comment-item';
+        div.id = `comment-${d.comment.id}`;
+        const author = d.comment.first_name ? `${d.comment.first_name} ${d.comment.last_name}` : me.username;
+        div.innerHTML = `<div class="comment-meta"><span class="comment-author">${author}</span><span><button class="comment-del" onclick="deleteComment('${dateStr}',${d.comment.id})">✕</button></span></div><div class="comment-body">${escHtml(body)}</div>`;
+        container.appendChild(div);
+        loadCellReactions(dateStr);
+    }
+}
+
+async function deleteComment(dateStr, id) {
+    await fetch(`/api/events/${encodeURIComponent(dateStr)}/comments/${id}`, { method:'DELETE' });
+    document.getElementById(`comment-${id}`)?.remove();
+    loadCellReactions(dateStr);
+}
+
+async function toggleBookmark(dateStr) {
+    const btn = document.getElementById(`bm-btn-${dateStr}`);
+    const isBookmarked = btn.classList.contains('bookmarked');
+    if (isBookmarked) {
+        await fetch(`/api/me/bookmarks/${encodeURIComponent(dateStr)}`, { method:'DELETE' });
+        btn.classList.remove('bookmarked');
+    } else {
+        await fetch(`/api/me/bookmarks/${encodeURIComponent(dateStr)}`, { method:'POST' });
+        btn.classList.add('bookmarked');
+    }
+    loadBookmarks();
+}
+
+loadData();
 </script>
 </body>
 </html>
