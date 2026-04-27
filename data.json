@@ -1,0 +1,66 @@
+{
+  "May": {
+    "color": "#FFC107",
+    "events": [
+      {"date": "2026-05-01", "name": "Placeholder Event"},
+      {"date": "2026-05-15", "name": "Placeholder Event"},
+      {"date": "2026-05-23", "name": "Labour Day"},
+      {"date": "2026-05-25", "name": "Labour Day (in lieu)"},
+      {"date": "2026-05-29", "name": "Placeholder Event"}
+    ]
+  },
+  "June": {
+    "color": "#E91E63",
+    "events": [
+      {"date": "2026-06-12", "name": "Placeholder Event"},
+      {"date": "2026-06-26", "name": "Placeholder Event"}
+    ]
+  },
+  "July": {
+    "color": "#9C27B0",
+    "events": [
+      {"date": "2026-07-10", "name": "Placeholder Event"},
+      {"date": "2026-07-24", "name": "Placeholder Event"}
+    ]
+  },
+  "August": {
+    "color": "#F44336",
+    "events": [
+      {"date": "2026-08-01", "name": "Emancipation Day"},
+      {"date": "2026-08-06", "name": "Independence Day"},
+      {"date": "2026-08-07", "name": "Placeholder Event"},
+      {"date": "2026-08-21", "name": "Placeholder Event"}
+    ]
+  },
+  "September": {
+    "color": "#009688",
+    "events": [
+      {"date": "2026-09-04", "name": "Placeholder Event"},
+      {"date": "2026-09-18", "name": "Placeholder Event"}
+    ]
+  },
+  "October": {
+    "color": "#8BC34A",
+    "events": [
+      {"date": "2026-10-02", "name": "Placeholder Event"},
+      {"date": "2026-10-16", "name": "Placeholder Event"},
+      {"date": "2026-10-19", "name": "National Heroes' Day"},
+      {"date": "2026-10-30", "name": "Placeholder Event"}
+    ]
+  },
+  "November": {
+    "color": "#FF9800",
+    "events": [
+      {"date": "2026-11-13", "name": "Placeholder Event"},
+      {"date": "2026-11-27", "name": "Placeholder Event"}
+    ]
+  },
+  "December": {
+    "color": "#D81B60",
+    "events": [
+      {"date": "2026-12-11", "name": "Placeholder Event"},
+      {"date": "2026-12-25", "name": "Christmas Day"},
+      {"date": "2026-12-26", "name": "Boxing Day"}
+    ]
+  }
+}

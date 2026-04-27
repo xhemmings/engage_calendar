@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editable Engagement Calendar</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f4f4;
+        }
+        h1 { margin-bottom: 20px; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .month-card {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.1s ease-in-out;
+        }
+        .month-card:hover { transform: translateY(-2px); }
+        .month-header { padding: 10px; color: #ffffff; font-weight: bold; }
+        .month-body { padding: 10px; flex: 1; }
+        .month-range { font-size: 0.85em; color: #555555; margin-bottom: 8px; }
+        .month-events { list-style: none; padding: 0; margin: 0; }
+        .month-events li {
+            margin-bottom: 4px;
+            padding: 4px;
+            border-left: 4px solid transparent;
+            border-radius: 4px;
+        }
+        .month-events li.weekend { background: #eeeeee; }
+        .month-events li.holiday { border-left-color: #d32f2f; font-weight: bold; }
+        #modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h2 { margin-top: 0; }
+        .event-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .event-row input[type="date"],
+        .event-row input[type="text"] {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+        }
+        .event-row button.delete {
+            background: #e53935;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .modal-buttons button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #cancel-btn { background: #aaaaaa; color: #ffffff; }
+        #save-btn { background: #4caf50; color: #ffffff; }
+        #status { font-size: 0.85em; color: #555; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Editable Engagement Calendar</h1>
+    <p>Click a month card to edit its events, colours and dates. Changes are saved to the server.</p>
+    <div id="status"></div>
+    <div class="calendar-grid" id="calendar"></div>
+
+    <div id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Edit Month</h2>
+            <div style="margin-bottom:10px;">
+                <label><strong>Card Colour:</strong> <input type="color" id="card-color" /></label>
+            </div>
+            <div id="events-container"></div>
+            <button id="add-event">Add Event</button>
+            <div class="modal-buttons">
+                <button id="cancel-btn">Cancel</button>
+                <button id="save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let calendarData = {};
+    let currentEditMonth = null;
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    async function loadData() {
+        try {
+            const res = await fetch('/api/calendar');
+            calendarData = await res.json();
+        } catch (e) {
+            setStatus('Error loading data from server.');
+        }
+    }
+
+    async function saveData() {
+        try {
+            const res = await fetch('/api/calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(calendarData)
+            });
+            const result = await res.json();
+            if (!result.ok) setStatus('Save failed.');
+            else setStatus('Saved.');
+        } catch (e) {
+            setStatus('Error saving data to server.');
+        }
+    }
+
+    function formatDateLabel(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+        return `${month} ${date.getDate()}`;
+    }
+
+    function ordinal(num) {
+        const s = ["th","st","nd","rd"], v = num % 100;
+        return num + (s[(v-20)%10] || s[v] || s[0]);
+    }
+
+    function getDateRangeText(events) {
+        if (!events || events.length === 0) return '';
+        const days = events.map(ev => new Date(ev.date + 'T00:00:00').getDate());
+        return `${ordinal(Math.min(...days))} - ${ordinal(Math.max(...days))}`;
+    }
+
+    function buildCalendar() {
+        const container = document.getElementById('calendar');
+        container.innerHTML = '';
+        Object.keys(calendarData).forEach(month => {
+            const cardData = calendarData[month];
+            const card = document.createElement('div');
+            card.className = 'month-card';
+            card.dataset.month = month;
+
+            const header = document.createElement('div');
+            header.className = 'month-header';
+            header.style.background = cardData.color || '#007bff';
+            header.textContent = month;
+            card.appendChild(header);
+
+            const body = document.createElement('div');
+            body.className = 'month-body';
+
+            const range = document.createElement('div');
+            range.className = 'month-range';
+            range.textContent = getDateRangeText(cardData.events);
+            body.appendChild(range);
+
+            const ul = document.createElement('ul');
+            ul.className = 'month-events';
+            (cardData.events || []).sort((a,b) => a.date.localeCompare(b.date)).forEach(ev => {
+                const li = document.createElement('li');
+                const day = new Date(ev.date + 'T00:00:00').getUTCDay();
+                if (day === 0 || day === 6) li.classList.add('weekend');
+                if (ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day')) li.classList.add('holiday');
+                li.textContent = `${formatDateLabel(ev.date)}: ${ev.name}`;
+                ul.appendChild(li);
+            });
+            body.appendChild(ul);
+            card.appendChild(body);
+            card.addEventListener('click', () => openEditor(month));
+            container.appendChild(card);
+        });
+    }
+
+    function openEditor(month) {
+        currentEditMonth = month;
+        const data = calendarData[month];
+        document.getElementById('modal-title').textContent = `Edit ${month}`;
+        document.getElementById('card-color').value = data.color || '#007bff';
+        const eventsContainer = document.getElementById('events-container');
+        eventsContainer.innerHTML = '';
+        (data.events || []).sort((a,b) => a.date.localeCompare(b.date)).forEach(ev => addEventRow(ev.date, ev.name));
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function addEventRow(dateValue = '', nameValue = '') {
+        const container = document.getElementById('events-container');
+        const row = document.createElement('div');
+        row.className = 'event-row';
+
+        const dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.value = dateValue;
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.placeholder = 'Event name';
+        nameInput.value = nameValue;
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.className = 'delete';
+        delBtn.addEventListener('click', () => container.removeChild(row));
+
+        row.appendChild(dateInput);
+        row.appendChild(nameInput);
+        row.appendChild(delBtn);
+        container.appendChild(row);
+    }
+
+    document.getElementById('add-event').addEventListener('click', () => addEventRow('', ''));
+
+    document.getElementById('cancel-btn').addEventListener('click', () => {
+        document.getElementById('modal').style.display = 'none';
+        currentEditMonth = null;
+    });
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        if (!currentEditMonth) return;
+        const colorVal = document.getElementById('card-color').value;
+        const rows = document.querySelectorAll('#events-container .event-row');
+        const newEvents = [];
+        rows.forEach(row => {
+            const date = row.querySelector('input[type="date"]').value;
+            const name = row.querySelector('input[type="text"]').value.trim();
+            if (date && name) newEvents.push({ date, name });
+        });
+        calendarData[currentEditMonth] = {
+            color: colorVal,
+            events: newEvents.sort((a,b) => a.date.localeCompare(b.date))
+        };
+        await saveData();
+        buildCalendar();
+        document.getElementById('modal').style.display = 'none';
+        currentEditMonth = null;
+    });
+
+    (async () => {
+        await loadData();
+        buildCalendar();
+    })();
+    </script>
+</body>
+</html>

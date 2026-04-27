@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engagement Calendar 2026</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #eef0f3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Top bar ── */
+        header {
+            background: #1a1f36;
+            color: #fff;
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: 0.5px; }
+        header a {
+            color: #a0a8d0;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        header a:hover { color: #fff; }
+
+        /* ── Three-column layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 220px;
+            gap: 0;
+            flex: 1;
+            padding: 28px 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ── Wells ── */
+        .well {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 20px 16px;
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+        .well h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 14px;
+        }
+
+        /* Left well – legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: #444;
+        }
+        .legend-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .legend-swatch {
+            width: 12px; height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* Right well – upcoming events */
+        .upcoming-event {
+            padding: 7px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.82rem;
+        }
+        .upcoming-event:last-child { border-bottom: none; }
+        .upcoming-event .ev-date { color: #888; font-size: 0.75rem; margin-bottom: 2px; }
+        .upcoming-event .ev-name { color: #222; font-weight: 500; }
+        .upcoming-event .ev-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* ── Main content ── */
+        .main {
+            padding: 0 24px;
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        /* ── Month card (collapsed) ── */
+        .month-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .month-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        .month-card.active {
+            outline: 3px solid #1a1f36;
+        }
+        .card-header {
+            padding: 12px 14px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header .chevron {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            transition: transform 0.2s;
+        }
+        .month-card.active .chevron { transform: rotate(180deg); }
+        .card-body { padding: 10px 14px 12px; }
+        .card-event-count {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .card-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .card-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        .card-dot.holiday { background: #d32f2f; }
+        .card-dot.normal  { background: #90a4ae; }
+
+        /* ── Expanded month view ── */
+        .expanded-panel {
+            display: none;
+            grid-column: 1 / -1;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .expanded-panel.open { display: block; }
+
+        .exp-header {
+            padding: 16px 24px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exp-close {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: #fff;
+            border-radius: 50%;
+            width: 28px; height: 28px;
+            font-size: 1rem;
+            cursor: pointer;
+            line-height: 28px;
+            text-align: center;
+        }
+        .exp-close:hover { background: rgba(255,255,255,0.4); }
+
+        .cal-grid-wrap { padding: 20px 24px 24px; }
+
+        /* Calendar grid */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .cal-day-name {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #aaa;
+            text-transform: uppercase;
+            padding-bottom: 6px;
+        }
+        .cal-cell {
+            min-height: 64px;
+            border-radius: 8px;
+            padding: 6px 8px;
+            background: #f8f9fa;
+            font-size: 0.85rem;
+            position: relative;
+        }
+        .cal-cell.empty { background: transparent; }
+        .cal-cell.weekend { background: #f0f0f0; }
+        .cal-cell.has-event { background: #e8f5e9; cursor: default; }
+        .cal-cell.has-holiday { background: #fdecea; }
+        .cal-cell .cell-num {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .cal-cell.today .cell-num {
+            background: #1a1f36;
+            color: #fff;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cal-cell .cell-events { margin-top: 4px; }
+        .cell-ev-tag {
+            display: block;
+            font-size: 0.72rem;
+            color: #444;
+            background: rgba(0,0,0,0.07);
+            border-radius: 4px;
+            padding: 1px 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cell-ev-tag.holiday {
+            background: #ffcdd2;
+            color: #b71c1c;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .well { display: none; }
+            .main { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Engagement Calendar 2026</h1>
+    <a href="/admin.html">&#9998; Admin</a>
+</header>
+
+<div class="layout">
+    <!-- Left well: legend -->
+    <aside class="well" id="left-well">
+        <h3>Legend</h3>
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#d32f2f;"></div>
+            Public Holiday
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#90a4ae;"></div>
+            Event
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#fdecea;border:1px solid #eee;"></div>
+            Holiday day
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#f0f0f0;border:1px solid #eee;"></div>
+            Weekend
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#e8f5e9;border:1px solid #eee;"></div>
+            Event day
+        </div>
+        <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
+        <h3>Months</h3>
+        <div id="month-nav" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </aside>
+
+    <!-- Main grid -->
+    <main class="main">
+        <div class="months-grid" id="months-grid"></div>
+    </main>
+
+    <!-- Right well: upcoming events -->
+    <aside class="well" id="right-well">
+        <h3>All Events</h3>
+        <div id="upcoming-list"></div>
+    </aside>
+</div>
+
+<script>
+let calendarData = {};
+let activeMonth = null;
+let expandedEl = null;
+
+const TODAY = new Date();
+
+function isHoliday(ev) {
+    return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day');
+}
+
+function formatShort(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+// ── Right well: all events list ──
+function buildUpcoming() {
+    const list = document.getElementById('upcoming-list');
+    list.innerHTML = '';
+    const all = [];
+    Object.keys(calendarData).forEach(month => {
+        const color = calendarData[month].color || '#007bff';
+        (calendarData[month].events || []).forEach(ev => all.push({ ...ev, color, month }));
+    });
+    all.sort((a, b) => a.date.localeCompare(b.date));
+    all.forEach(ev => {
+        const div = document.createElement('div');
+        div.className = 'upcoming-event';
+        div.innerHTML = `
+            <div class="ev-date">${formatShort(ev.date)}</div>
+            <div class="ev-name">
+                <span class="ev-dot" style="background:${isHoliday(ev) ? '#d32f2f' : ev.color}"></span>${ev.name}
+            </div>`;
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => openMonth(ev.month));
+        list.appendChild(div);
+    });
+}
+
+// ── Left well: month nav links ──
+function buildMonthNav() {
+    const nav = document.getElementById('month-nav');
+    nav.innerHTML = '';
+    Object.keys(calendarData).forEach(month => {
+        const color = calendarData[month].color || '#007bff';
+        const a = document.createElement('a');
+        a.href = '#';
+        a.style.cssText = `display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#333;text-decoration:none;padding:4px 6px;border-radius:6px;transition:background 0.1s`;
+        a.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>${month}`;
+        a.addEventListener('click', e => { e.preventDefault(); openMonth(month); });
+        a.addEventListener('mouseenter', () => a.style.background = '#f0f0f0');
+        a.addEventListener('mouseleave', () => a.style.background = 'transparent');
+        nav.appendChild(a);
+    });
+}
+
+// ── Build collapsed month cards ──
+function buildGrid() {
+    const grid = document.getElementById('months-grid');
+    grid.innerHTML = '';
+
+    Object.keys(calendarData).forEach((month, idx) => {
+        const data = calendarData[month];
+        const events = data.events || [];
+
+        // Card
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.id = `card-${month}`;
+        card.innerHTML = `
+            <div class="card-header" style="background:${data.color || '#007bff'}">
+                <span>${month}</span>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="card-body">
+                <div class="card-event-count">${events.length} event${events.length !== 1 ? 's' : ''}</div>
+                <div class="card-dots">${events.map(ev =>
+                    `<div class="card-dot ${isHoliday(ev) ? 'holiday' : 'normal'}" title="${ev.name}"></div>`
+                ).join('')}</div>
+            </div>`;
+        card.addEventListener('click', () => toggleMonth(month, card));
+        grid.appendChild(card);
+
+        // Expanded panel placeholder (inserted after card's row)
+        const panel = document.createElement('div');
+        panel.className = 'expanded-panel';
+        panel.id = `panel-${month}`;
+        grid.appendChild(panel);
+    });
+}
+
+function toggleMonth(month, card) {
+    if (activeMonth === month) {
+        closeExpanded();
+        return;
+    }
+    openMonth(month);
+}
+
+function openMonth(month) {
+    closeExpanded();
+
+    const card = document.getElementById(`card-${month}`);
+    const panel = document.getElementById(`panel-${month}`);
+    const data = calendarData[month];
+
+    card.classList.add('active');
+    panel.classList.add('open');
+    panel.innerHTML = buildExpandedHTML(month, data);
+    panel.querySelector('.exp-close').addEventListener('click', closeExpanded);
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    activeMonth = month;
+    expandedEl = { card, panel };
+}
+
+function closeExpanded() {
+    if (!expandedEl) return;
+    expandedEl.card.classList.remove('active');
+    expandedEl.panel.classList.remove('open');
+    expandedEl.panel.innerHTML = '';
+    activeMonth = null;
+    expandedEl = null;
+}
+
+// ── Build full-month calendar grid HTML ──
+function buildExpandedHTML(monthName, data) {
+    const events = data.events || [];
+    const eventMap = {};
+    events.forEach(ev => {
+        const day = parseInt(ev.date.split('-')[2], 10);
+        if (!eventMap[day]) eventMap[day] = [];
+        eventMap[day].push(ev);
+    });
+
+    // Determine year and month index from first event date
+    const firstDate = events[0] ? new Date(events[0].date + 'T00:00:00') : new Date();
+    const year = events[0] ? parseInt(events[0].date.split('-')[0], 10) : TODAY.getFullYear();
+    const monthIdx = events[0] ? parseInt(events[0].date.split('-')[1], 10) - 1 : TODAY.getMonth();
+
+    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+    const firstDow = new Date(year, monthIdx, 1).getDay(); // 0=Sun
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let cells = '';
+
+    // Day name headers
+    dayNames.forEach(d => { cells += `<div class="cal-day-name">${d}</div>`; });
+
+    // Empty leading cells
+    for (let i = 0; i < firstDow; i++) cells += `<div class="cal-cell empty"></div>`;
+
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dow = (firstDow + d - 1) % 7;
+        const isWeekend = dow === 0 || dow === 6;
+        const dayEvents = eventMap[d] || [];
+        const hasHol = dayEvents.some(ev => isHoliday(ev));
+        const hasEv  = dayEvents.length > 0;
+        const isToday = (TODAY.getFullYear() === year && TODAY.getMonth() === monthIdx && TODAY.getDate() === d);
+
+        let cls = 'cal-cell';
+        if (isWeekend) cls += ' weekend';
+        if (hasHol)    cls += ' has-holiday';
+        else if (hasEv) cls += ' has-event';
+        if (isToday)   cls += ' today';
+
+        const evTags = dayEvents.map(ev =>
+            `<span class="cell-ev-tag ${isHoliday(ev) ? 'holiday' : ''}">${ev.name}</span>`
+        ).join('');
+
+        cells += `<div class="${cls}">
+            <div class="cell-num">${d}</div>
+            <div class="cell-events">${evTags}</div>
+        </div>`;
+    }
+
+    return `
+        <div class="exp-header" style="background:${data.color || '#007bff'}">
+            <span>${monthName} ${year}</span>
+            <button class="exp-close" title="Close">&#x2715;</button>
+        </div>
+        <div class="cal-grid-wrap">
+            <div class="cal-grid">${cells}</div>
+        </div>`;
+}
+
+fetch('/api/calendar')
+    .then(r => r.json())
+    .then(data => {
+        calendarData = data;
+        buildGrid();
+        buildUpcoming();
+        buildMonthNav();
+    })
+    .catch(() => {
+        document.getElementById('months-grid').textContent = 'Error loading calendar data.';
+    });
+</script>
+</body>
+</html>
