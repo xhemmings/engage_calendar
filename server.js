@@ -1,3 +1,4 @@
+require('fs').existsSync('.env') && require('fs').readFileSync('.env','utf8').split('\n').forEach(l => { const [k,...v]=l.split('='); if(k&&v.length) process.env[k.trim()]=v.join('=').trim(); });
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
