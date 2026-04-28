@@ -469,6 +469,19 @@ app.get('/api/invites/stats', requireAdmin, async (req, res) => {
   res.json(rows);
 });
 
+// ── Cancel invite ─────────────────────────────────────────────────────────────
+app.delete('/api/invites/:token', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  const { token } = req.params;
+  // Superadmin can cancel any pending invite; admin can only cancel their own
+  if (me.role === 'superadmin') {
+    await pool.query('DELETE FROM invites WHERE token=$1 AND used=false', [token]);
+  } else {
+    await pool.query('DELETE FROM invites WHERE token=$1 AND used=false AND created_by=$2', [token, me.username]);
+  }
+  res.json({ ok: true });
+});
+
 // ── Reminders ─────────────────────────────────────────────────────────────────
 app.post('/api/reminders', requireAdmin, async (req, res) => {
   const me = getSession(req);

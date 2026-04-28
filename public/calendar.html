@@ -200,8 +200,14 @@
         @media (max-width: 900px) {
             .layout { grid-template-columns: 1fr; padding: 12px; }
             .well { display: none; }
-            .main { padding: 0; }
-            .mobile-events-section { display: block; }
+            .main { padding: 0; display: flex; flex-direction: column; }
+            .filter-bar         { order: 1; }
+            .months-grid        { order: 3; }
+            .expanded-panel     { order: 4; }
+            .mobile-events-section { display: block; order: 5; }
+            /* Birthday mode: pull events list above the grid */
+            .main.birthday-mode .mobile-events-section { order: 2; }
+            .main.birthday-mode .mobile-events-list { max-height: 320px; overflow-y: auto; }
         }
         @media (max-width: 768px) {
             header { padding: 0 14px; height: 52px; }
@@ -441,6 +447,19 @@ function setFilter(filter) {
     document.getElementById('filter-birthdays').classList.toggle('active', filter === 'birthdays');
     document.getElementById('right-well-title').textContent = filter === 'birthdays' ? '🎂 Birthdays' : 'All Events';
     buildUpcoming();
+
+    // Mobile: reorder and auto-open accordion when birthdays selected
+    const main = document.querySelector('.main');
+    const mobileList = document.getElementById('mobile-events-list');
+    const chevron = document.querySelector('.mobile-events-toggle span:last-child');
+    if (filter === 'birthdays') {
+        main.classList.add('birthday-mode');
+        mobileList.classList.add('open');
+        if (chevron) chevron.textContent = '▲';
+    } else {
+        main.classList.remove('birthday-mode');
+    }
+
     // Re-render open month if any
     if (activeMonth) {
         const panel = document.getElementById('month-detail');

@@ -17,31 +17,43 @@
         .nav-btn-logout { background: rgba(229,57,53,.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,.3); padding: 7px 14px; border-radius: 6px; font-size: .88rem; cursor: pointer; }
         .nav-btn-logout:hover { background: rgba(229,57,53,.4); color: #fff; }
 
-        .page { max-width: 960px; margin: 36px auto; padding: 0 24px; width: 100%; }
+        .page { max-width: 1000px; margin: 36px auto; padding: 0 24px; width: 100%; }
 
-        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 14px; }
-        .page-header h1 { font-size: 1.4rem; color: #1a1f36; }
-        .page-header p  { font-size: .85rem; color: #888; margin-top: 4px; }
+        /* ── Stat strip ── */
+        .stat-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+        .sstat { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex; align-items: center; gap: 12px; }
+        .sstat-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sstat-val { font-size: 1.4rem; font-weight: 800; color: #1a1f36; line-height: 1; }
+        .sstat-lbl { font-size: .72rem; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 14px; }
+        .page-header h1 { font-size: 1.3rem; color: #1a1f36; }
+        .page-header p  { font-size: .84rem; color: #888; margin-top: 3px; }
         .hdr-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-        .btn-primary { padding: 10px 18px; background: #1a1f36; color: #fff; border: none; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+        .section-hdr { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 14px; }
+        .section-hdr h2 { font-size: 1rem; color: #1a1f36; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .section-hdr p { font-size: .82rem; color: #888; }
+
+        .btn-primary { padding: 10px 18px; background: #1a1f36; color: #fff; border: none; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; display:flex;align-items:center;gap:6px; }
         .btn-primary:hover { background: #2d3561; }
         .btn-green { background: #2e7d32; }
         .btn-green:hover { background: #1b5e20; }
 
         /* Search */
-        .search-bar { margin-bottom: 18px; position: relative; }
+        .search-bar { margin-bottom: 14px; position: relative; }
         .search-bar input { width: 100%; padding: 11px 14px 11px 38px; border: 1.5px solid #e0e0e0; border-radius: 9px; font-size: .92rem; outline: none; transition: border-color .15s; background: #fff; }
         .search-bar input:focus { border-color: #1a1f36; }
         .search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
 
         /* Table */
-        .users-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden; margin-bottom: 28px; }
-        .users-card table { width: 100%; border-collapse: collapse; }
-        .users-card th { background: #f8f9fa; text-align: left; padding: 12px 18px; font-size: .73rem; text-transform: uppercase; letter-spacing: .8px; color: #888; font-weight: 700; border-bottom: 1px solid #eee; }
-        .users-card td { padding: 14px 18px; border-bottom: 1px solid #f5f5f5; font-size: .88rem; color: #333; vertical-align: middle; }
-        .users-card tr:last-child td { border-bottom: none; }
-        .users-card tr:hover td { background: #fafafa; }
+        .data-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow: hidden; margin-bottom: 10px; }
+        .data-card table { width: 100%; border-collapse: collapse; }
+        .data-card th { background: #f8f9fa; text-align: left; padding: 12px 18px; font-size: .73rem; text-transform: uppercase; letter-spacing: .8px; color: #888; font-weight: 700; border-bottom: 1px solid #eee; }
+        .data-card td { padding: 13px 18px; border-bottom: 1px solid #f5f5f5; font-size: .87rem; color: #333; vertical-align: middle; }
+        .data-card tr:last-child td { border-bottom: none; }
+        .data-card tr:hover td { background: #fafafa; }
+        .data-card .empty-row td { padding: 28px; text-align: center; color: #bbb; }
 
         .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .88rem; color: #fff; flex-shrink: 0; }
         .user-cell { display: flex; align-items: center; gap: 10px; }
@@ -54,19 +66,29 @@
         .role-viewer { background: #fff8e1; color: #f57f17; }
 
         .actions { display: flex; gap: 6px; flex-wrap: wrap; }
-        .btn-sm { padding: 5px 11px; border: none; border-radius: 6px; font-size: .78rem; cursor: pointer; font-weight: 600; transition: background .15s; white-space: nowrap; }
-        .btn-edit  { background: #e3f2fd; color: #1565c0; }
-        .btn-edit:hover  { background: #bbdefb; }
-        .btn-pwd   { background: #f3e5f5; color: #6a1b9a; }
-        .btn-pwd:hover   { background: #e1bee7; }
-        .btn-del   { background: #fdecea; color: #c62828; }
-        .btn-del:hover   { background: #ffcdd2; }
+        .btn-sm { padding: 5px 10px; border: none; border-radius: 6px; font-size: .76rem; cursor: pointer; font-weight: 600; transition: background .15s; white-space: nowrap; display:flex;align-items:center;gap:4px; }
+        .btn-edit { background: #e3f2fd; color: #1565c0; }
+        .btn-edit:hover { background: #bbdefb; }
+        .btn-pwd  { background: #f3e5f5; color: #6a1b9a; }
+        .btn-pwd:hover  { background: #e1bee7; }
+        .btn-del  { background: #fdecea; color: #c62828; }
+        .btn-del:hover  { background: #ffcdd2; }
+        .btn-cancel-inv { background: #fff3e0; color: #e65100; border: none; border-radius: 6px; padding: 4px 7px; cursor: pointer; transition: background .15s; display:flex;align-items:center; }
+        .btn-cancel-inv:hover { background: #ffe0b2; }
+        .btn-copy-inv { background: #e8f5e9; color: #1b5e20; border: none; border-radius: 6px; padding: 4px 9px; cursor: pointer; font-size: .76rem; font-weight: 600; transition: background .15s; }
+        .btn-copy-inv:hover { background: #c8e6c9; }
+
+        /* Invite status badges */
+        .inv-badge { padding: 2px 9px; border-radius: 10px; font-size: .7rem; font-weight: 700; }
+        .inv-used    { background: #dcfce7; color: #166534; }
+        .inv-pending { background: #fef3c7; color: #92400e; }
+        .inv-expired { background: #f3f4f6; color: #9ca3af; }
 
         /* Modals */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
         .modal { background: #fff; border-radius: 14px; padding: 32px; max-width: 480px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.15); }
-        .modal h3 { font-size: 1.15rem; color: #1a1f36; margin-bottom: 20px; }
+        .modal h3 { font-size: 1.1rem; color: #1a1f36; margin-bottom: 20px; display:flex;align-items:center;gap:8px; }
         .field { margin-bottom: 14px; }
         .field label { display: block; font-size: .76rem; font-weight: 700; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
         .field input, .field select { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: .92rem; outline: none; transition: border-color .15s; }
@@ -83,22 +105,21 @@
         .modal-msg.ok  { color: #2e7d32; }
         .modal-msg.err { color: #c62828; }
 
-        /* Invite modal */
         .invite-link-box { display: flex; gap: 8px; align-items: center; background: #f8f9fa; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: .82rem; word-break: break-all; }
         .invite-link-box span { flex: 1; }
         .btn-copy { flex-shrink: 0; padding: 7px 12px; background: #1a1f36; color: #fff; border: none; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; }
         .copy-ok { font-size: .78rem; color: #22c55e; display: none; }
 
-        /* Confirm */
         .confirm-modal { max-width: 380px; }
         .confirm-modal p { font-size: .88rem; color: #666; margin-bottom: 22px; }
 
         @media (max-width: 700px) {
-            .page { padding: 0 14px; margin-top: 20px; }
-            .users-card td { padding: 10px 12px; }
-            .users-card th { padding: 10px 12px; }
+            .page { padding: 0 14px; margin-top: 16px; }
+            .stat-strip { grid-template-columns: repeat(2,1fr); }
+            .data-card td, .data-card th { padding: 10px 12px; }
             .field-row { grid-template-columns: 1fr; }
             nav { padding: 0 16px; }
+            .section-hdr { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
     </style>
 </head>
@@ -109,17 +130,46 @@
         <a href="/calendar.html" class="nav-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home
         </a>
-        <a href="/admin.html" class="nav-link">&#9881; Dashboard</a>
-        <a href="/users.html" class="nav-link active">&#128100; Users</a>
+        <a href="/admin.html" class="nav-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+        </a>
+        <a href="/users.html" class="nav-link active">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users
+        </a>
         <button class="nav-btn-logout" onclick="logout()">Logout</button>
     </div>
 </nav>
 
 <div class="page">
-    <div class="page-header">
+
+    <!-- Stats strip -->
+    <div class="stat-strip" id="stat-strip">
+        <div class="sstat">
+            <div class="sstat-icon" style="background:#e8eaf6;color:#3949ab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div><div class="sstat-val" id="st-total">—</div><div class="sstat-lbl">Total Users</div></div>
+        </div>
+        <div class="sstat">
+            <div class="sstat-icon" style="background:#e8f5e9;color:#2e7d32"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+            <div><div class="sstat-val" id="st-admins">—</div><div class="sstat-lbl">Admins</div></div>
+        </div>
+        <div class="sstat">
+            <div class="sstat-icon" style="background:#fff8e1;color:#f57f17"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <div><div class="sstat-val" id="st-viewers">—</div><div class="sstat-lbl">Viewers</div></div>
+        </div>
+        <div class="sstat">
+            <div class="sstat-icon" style="background:#fce4ec;color:#c2185b"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+            <div><div class="sstat-val" id="st-pending">—</div><div class="sstat-lbl">Pending Invites</div></div>
+        </div>
+    </div>
+
+    <!-- Users section -->
+    <div class="section-hdr">
         <div>
-            <h1>User Management</h1>
-            <p>Manage access and user information.</p>
+            <h2>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Team Members
+            </h2>
+            <p style="margin-top:3px;font-size:.82rem;color:#888">Manage user access and information.</p>
         </div>
         <div class="hdr-actions" id="invite-buttons"></div>
     </div>
@@ -129,7 +179,7 @@
         <input type="text" id="search-input" placeholder="Search by name, username, email or phone…" oninput="filterUsers()" />
     </div>
 
-    <div class="users-card">
+    <div class="data-card">
         <table>
             <thead><tr>
                 <th>User</th>
@@ -139,16 +189,45 @@
                 <th>Actions</th>
             </tr></thead>
             <tbody id="users-tbody">
-                <tr><td colspan="5" style="padding:28px;text-align:center;color:#bbb">Loading…</td></tr>
+                <tr class="empty-row"><td colspan="5">Loading…</td></tr>
             </tbody>
         </table>
     </div>
+
+    <!-- Invitations section -->
+    <div class="section-hdr">
+        <div>
+            <h2>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Invitations
+            </h2>
+            <p style="margin-top:3px;font-size:.82rem;color:#888">Track and manage invite links. Cancel pending invites at any time.</p>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <table>
+            <thead><tr>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Used By</th>
+                <th>Created By</th>
+                <th>Sent</th>
+                <th>Expires</th>
+                <th>Actions</th>
+            </tr></thead>
+            <tbody id="invites-tbody">
+                <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
-<!-- Invite modal -->
+<!-- Invite link modal -->
 <div class="modal-overlay" id="invite-modal">
     <div class="modal">
-        <h3>&#128279; Invite Link Ready</h3>
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Invite Link Ready</h3>
         <p id="invite-modal-desc" style="font-size:.88rem;color:#666;margin-bottom:16px"></p>
         <div class="invite-link-box"><span id="invite-link-text"></span><button class="btn-copy" onclick="copyLink()">Copy</button></div>
         <div class="copy-ok" id="copy-ok">✓ Copied</div>
@@ -159,7 +238,7 @@
 <!-- Edit user modal -->
 <div class="modal-overlay" id="edit-modal">
     <div class="modal">
-        <h3>Edit User</h3>
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Edit User</h3>
         <div class="field"><label>Username</label><input type="text" id="edit-username" disabled /></div>
         <div class="field-row">
             <div class="field"><label>First Name</label><input type="text" id="edit-first" /></div>
@@ -189,11 +268,11 @@
     </div>
 </div>
 
-<!-- Reset password confirm modal -->
+<!-- Reset password modal -->
 <div class="modal-overlay" id="pwd-modal">
     <div class="modal confirm-modal">
-        <h3>&#128274; Reset Password</h3>
-        <p id="pwd-modal-text">This will generate a new password and send it to the user's email address.</p>
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Reset Password</h3>
+        <p id="pwd-modal-text">A new password will be generated and emailed to the user.</p>
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal('pwd-modal')">Cancel</button>
             <button class="btn-save" style="background:#6a1b9a" onclick="confirmResetPassword()">Send Password</button>
@@ -205,7 +284,7 @@
 <!-- Confirm delete -->
 <div class="modal-overlay" id="confirm-modal">
     <div class="modal confirm-modal">
-        <h3>Remove User</h3>
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Remove User</h3>
         <p id="confirm-text">Are you sure? This cannot be undone.</p>
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal('confirm-modal')">Cancel</button>
@@ -214,34 +293,65 @@
     </div>
 </div>
 
+<!-- Confirm cancel invite -->
+<div class="modal-overlay" id="cancel-invite-modal">
+    <div class="modal confirm-modal">
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Cancel Invite</h3>
+        <p>This invite link will stop working immediately. The recipient will not be able to sign up using it.</p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal('cancel-invite-modal')">Keep It</button>
+            <button class="btn-save" style="background:#e65100" onclick="confirmCancelInvite()">Cancel Invite</button>
+        </div>
+    </div>
+</div>
+
 <script>
-let allUsers    = {};
-let myRole      = null;
-let myUsername  = null;
-let pendingUser = null;
+let allUsers      = {};
+let allInvites    = [];
+let myRole        = null;
+let myUsername    = null;
+let pendingUser   = null;
+let pendingToken  = null;
 
 const COLORS = ['#1a1f36','#e91e63','#9c27b0','#f44336','#ff9800','#009688','#8bc34a','#ffc107'];
 function colorFor(n) { let h=0; for(let c of n||'') h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
 function formatDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'; }
+function formatShortDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'; }
+function timeSince(date) {
+    const s = Math.floor((new Date()-new Date(date))/1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s/60)}m ago`;
+    if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+    return `${Math.floor(s/86400)}d ago`;
+}
 
 fetch('/api/auth-status').then(r=>r.json()).then(d => {
     if (!d.authenticated) { location.href='/login.html'; return; }
     if (!['admin','superadmin'].includes(d.role)) { location.href='/calendar.html'; return; }
     myRole = d.role; myUsername = d.username;
     buildInviteButtons();
-    loadUsers();
+    Promise.all([loadUsers(), loadInvites()]);
 });
 async function logout() { await fetch('/api/logout',{method:'POST'}); location.href='/login.html'; }
 
 function buildInviteButtons() {
     const el = document.getElementById('invite-buttons');
-    el.innerHTML = '';
     if (myRole === 'superadmin') {
         el.innerHTML = `
-            <button class="btn-primary btn-green" onclick="generateInvite('viewer')">+ Invite Viewer</button>
-            <button class="btn-primary" onclick="generateInvite('admin')">+ Invite Admin</button>`;
+            <button class="btn-primary btn-green" onclick="generateInvite('viewer')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Invite Viewer
+            </button>
+            <button class="btn-primary" onclick="generateInvite('admin')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Invite Admin
+            </button>`;
     } else {
-        el.innerHTML = `<button class="btn-primary btn-green" onclick="generateInvite('viewer')">+ Invite Viewer</button>`;
+        el.innerHTML = `
+            <button class="btn-primary btn-green" onclick="generateInvite('viewer')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Invite Viewer
+            </button>`;
     }
 }
 
@@ -249,7 +359,26 @@ async function loadUsers() {
     const r = await fetch('/api/users');
     if (!r.ok) return;
     allUsers = await r.json();
+    buildStats();
     renderUsers(allUsers);
+}
+
+async function loadInvites() {
+    const r = await fetch('/api/invites/stats');
+    if (!r.ok) return;
+    allInvites = await r.json();
+    buildStats();
+    renderInvites();
+}
+
+function buildStats() {
+    const entries = Object.values(allUsers);
+    document.getElementById('st-total').textContent   = entries.length;
+    document.getElementById('st-admins').textContent  = entries.filter(u => u.role === 'admin').length;
+    document.getElementById('st-viewers').textContent = entries.filter(u => u.role === 'viewer').length;
+    const now = new Date();
+    const pending = allInvites.filter(i => !i.used && new Date(i.expires_at) > now).length;
+    document.getElementById('st-pending').textContent = pending;
 }
 
 function filterUsers() {
@@ -267,7 +396,7 @@ function renderUsers(users) {
     const tbody = document.getElementById('users-tbody');
     const entries = Object.entries(users);
     if (!entries.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:28px;text-align:center;color:#bbb">No users found.</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No users found.</td></tr>';
         return;
     }
     tbody.innerHTML = entries.map(([username, u]) => {
@@ -277,21 +406,56 @@ function renderUsers(users) {
         const actions  = isMe
             ? '<span style="color:#ddd;font-size:.78rem">You</span>'
             : `<div class="actions">
-                ${canEdit ? `<button class="btn-sm btn-edit" onclick="openEdit('${username}')">Edit</button>` : ''}
-                ${canEdit ? `<button class="btn-sm btn-pwd" onclick="openResetPwd('${username}')">&#128274; Password</button>` : ''}
-                ${canEdit ? `<button class="btn-sm btn-del" onclick="askDelete('${username}')">Remove</button>` : ''}
+                ${canEdit ? `<button class="btn-sm btn-edit" onclick="openEdit('${username}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Edit</button>` : ''}
+                ${canEdit ? `<button class="btn-sm btn-pwd"  onclick="openResetPwd('${username}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Password</button>` : ''}
+                ${canEdit ? `<button class="btn-sm btn-del"  onclick="askDelete('${username}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Remove</button>` : ''}
                </div>`;
         return `<tr>
             <td><div class="user-cell">
                 <div class="avatar" style="background:${colorFor(username)}">${(fullName[0]||'?').toUpperCase()}</div>
                 <div>
                     <div class="user-name">${fullName}</div>
-                    <div class="user-sub">@${username} ${u.hasPassword ? '🔑' : ''}</div>
+                    <div class="user-sub">@${username}${u.hasPassword ? ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : ''}</div>
                 </div>
             </div></td>
             <td><div>${u.email||'—'}</div><div style="font-size:.75rem;color:#aaa">${u.phone||'—'}</div></td>
-            <td><span class="role-badge role-${u.role}">${u.role==='superadmin'?'★ Super Admin':u.role==='admin'?'Admin':'Viewer'}</span></td>
-            <td>${formatDate(u.createdAt)}</td>
+            <td><span class="role-badge role-${u.role}">${u.role==='admin'?'Admin':'Viewer'}</span></td>
+            <td style="color:#888;font-size:.82rem">${formatDate(u.createdAt)}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderInvites() {
+    const tbody = document.getElementById('invites-tbody');
+    const now = new Date();
+    if (!allInvites.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No invites sent yet. Use the buttons above to invite team members.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = allInvites.map(inv => {
+        const status = inv.used ? 'used' : new Date(inv.expires_at) < now ? 'expired' : 'pending';
+        const badgeCls = status === 'used' ? 'inv-used' : status === 'expired' ? 'inv-expired' : 'inv-pending';
+        const statusLabel = status === 'used' ? 'Used' : status === 'expired' ? 'Expired' : 'Pending';
+        const usedBy = inv.used_by || '—';
+        const inviteUrl = window.location.origin + '/invite.html?token=' + inv.token;
+
+        const actions = status === 'pending'
+            ? `<div style="display:flex;gap:6px;align-items:center">
+                <button class="btn-copy-inv" onclick="copyInviteLink('${inv.token}')" title="Copy link">Copy link</button>
+                <button class="btn-cancel-inv" onclick="askCancelInvite('${inv.token}')" title="Cancel invite">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </button>
+               </div>`
+            : '<span style="color:#ddd;font-size:.76rem">—</span>';
+
+        return `<tr>
+            <td><span class="role-badge role-${inv.invite_role}">${inv.invite_role === 'admin' ? 'Admin' : 'Viewer'}</span></td>
+            <td><span class="inv-badge ${badgeCls}">${statusLabel}</span></td>
+            <td style="color:#555;font-size:.84rem">${usedBy}</td>
+            <td style="color:#888;font-size:.82rem">${inv.created_by || '—'}</td>
+            <td style="color:#888;font-size:.82rem">${timeSince(inv.created_at)}</td>
+            <td style="color:${new Date(inv.expires_at)<now?'#ccc':'#888'};font-size:.82rem">${formatShortDate(inv.expires_at)}</td>
             <td>${actions}</td>
         </tr>`;
     }).join('');
@@ -308,11 +472,30 @@ async function generateInvite(role) {
         : 'Viewer invite — recipient can view, react and comment. Expires 48 hrs, single use.';
     document.getElementById('copy-ok').style.display = 'none';
     openModal('invite-modal');
+    await loadInvites();
 }
 function copyLink() {
     navigator.clipboard.writeText(document.getElementById('invite-link-text').textContent).then(() => {
         document.getElementById('copy-ok').style.display='block';
     });
+}
+function copyInviteLink(token) {
+    const url = window.location.origin + '/invite.html?token=' + token;
+    navigator.clipboard.writeText(url).then(() => {
+        // Brief visual feedback handled by browser
+    });
+}
+
+function askCancelInvite(token) {
+    pendingToken = token;
+    openModal('cancel-invite-modal');
+}
+async function confirmCancelInvite() {
+    if (!pendingToken) return;
+    await fetch(`/api/invites/${pendingToken}`, { method: 'DELETE' });
+    closeModal('cancel-invite-modal');
+    pendingToken = null;
+    await loadInvites();
 }
 
 // ── Edit ──────────────────────────────────────────────────────────────────────
@@ -322,12 +505,10 @@ function openEdit(username) {
     document.getElementById('edit-first').value    = u.firstName || '';
     document.getElementById('edit-last').value     = u.lastName  || '';
     document.getElementById('edit-email').value    = u.email     || '';
-    // Parse phone
     const phone = (u.phone || '').replace(/^\+1/,'');
     const area  = phone.slice(0,3);
     document.getElementById('edit-areacode').value = ['658'].includes(area) ? '658' : '876';
     document.getElementById('edit-phone').value    = phone.slice(3) || '';
-    // Role field: only superadmin can change roles
     const roleField = document.getElementById('edit-role-field');
     roleField.style.display = myRole === 'superadmin' ? 'block' : 'none';
     document.getElementById('edit-role').value = u.role;
