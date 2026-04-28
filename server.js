@@ -73,6 +73,15 @@ async function initDB() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS birthday      DATE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
+    CREATE TABLE IF NOT EXISTS personal_events (
+      id         SERIAL PRIMARY KEY,
+      username   TEXT NOT NULL,
+      date       TEXT NOT NULL,
+      name       TEXT NOT NULL,
+      note       TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     INSERT INTO users (username, phone, role)
     VALUES ('xavierh', '+18762903666', 'superadmin')
     ON CONFLICT DO NOTHING;
@@ -420,6 +429,65 @@ app.delete('/api/me/bookmarks/:key', requireAuth, async (req, res) => {
   const s = getSession(req);
   await pool.query('DELETE FROM bookmarks WHERE event_key=$1 AND username=$2', [decodeURIComponent(req.params.key), s.username]);
   res.json({ ok: true });
+});
+
+// ── Personal events ───────────────────────────────────────────────────────────
+app.get('/api/personal-events', requireAuth, async (req, res) => {
+  const s = getSession(req);
+  const { rows } = await pool.query('SELECT * FROM personal_events WHERE username=$1 ORDER BY date', [s.username]);
+  res.json(rows);
+});
+app.post('/api/personal-events', requireAuth, async (req, res) => {
+  const s = getSession(req);
+  const { date, name, note } = req.body || {};
+  if (!date || !name) return res.status(400).json({ error: 'date and name required' });
+  const { rows } = await pool.query('INSERT INTO personal_events (username,date,name,note) VALUES ($1,$2,$3,$4) RETURNING *', [s.username, date, name, note||null]);
+  res.json({ ok: true, event: rows[0] });
+});
+app.delete('/api/personal-events/:id', requireAuth, async (req, res) => {
+  const s = getSession(req);
+  await pool.query('DELETE FROM personal_events WHERE id=$1 AND username=$2', [req.params.id, s.username]);
+  res.json({ ok: true });
+});
+
+// ── Invite stats ──────────────────────────────────────────────────────────────
+app.get('/api/invites/stats', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  const { rows } = me.role === 'superadmin'
+    ? await pool.query('SELECT * FROM invites ORDER BY created_at DESC LIMIT 30')
+    : await pool.query('SELECT * FROM invites WHERE created_by=$1 ORDER BY created_at DESC LIMIT 30', [me.username]);
+  res.json(rows);
+});
+
+// ── Reminders ─────────────────────────────────────────────────────────────────
+app.post('/api/reminders', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  const { toUsername, message, date } = req.body || {};
+  if (!toUsername || !message) return res.status(400).json({ error: 'Recipient and message required' });
+  const { rows } = await pool.query('SELECT * FROM users WHERE username=$1', [toUsername]);
+  const user = rows[0];
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (!user.email) return res.status(400).json({ error: 'User has no email on file' });
+  const from = [user.first_name, user.last_name].filter(Boolean).join(' ') || toUsername;
+  try {
+    if (!process.env.EMAIL_USER) { console.log(`[DEV] Reminder to ${user.email}: ${message}`); }
+    else {
+      const nodemailer  = require('nodemailer');
+      const transporter = nodemailer.createTransport({ service:'gmail', auth:{ user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+      await transporter.sendMail({
+        from: `"Engagement Calendar" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: date ? `Reminder for ${date}` : 'Reminder from Engagement Calendar',
+        html: `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:480px;margin:0 auto;padding:28px;background:#fff;border-radius:12px">
+          <div style="font-size:1.1rem;font-weight:700;color:#1a1f36;margin-bottom:6px">📅 Engagement Calendar</div>
+          <div style="font-size:.85rem;color:#888;margin-bottom:18px">Reminder from ${me.username}</div>
+          ${date ? `<div style="background:#eef0f3;border-radius:8px;padding:10px 14px;font-weight:600;color:#1a1f36;margin-bottom:14px">📅 ${date}</div>` : ''}
+          <p style="color:#333;font-size:.95rem;line-height:1.6">${message}</p>
+        </div>`,
+      });
+    }
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: 'Failed to send reminder: ' + e.message }); }
 });
 
 // ── Activity log ─────────────────────────────────────────────────────────────
