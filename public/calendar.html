@@ -197,11 +197,25 @@
         .am-save:hover { background: #2d3561; }
         .am-cancel { padding: 11px 16px; background: #f0f0f0; color: #444; border: none; border-radius: 8px; cursor: pointer; }
 
-        /* ── Color picker ── */
+        /* ── Color picker (FAB modal) ── */
         .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: transform .12s; }
         .color-swatch:hover { transform: scale(1.18); }
         .color-swatch.selected { outline: 2.5px solid #1a1f36; outline-offset: 2px; transform: scale(1.1); }
+
+        /* ── Feedback modal color picker ── */
+        .fp-color-swatches { display: flex; gap: 5px; flex-wrap: wrap; }
+        .fp-color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; transition: transform .1s; flex-shrink: 0; }
+        .fp-color-swatch:hover { transform: scale(1.22); }
+        .fp-color-swatch.selected { outline: 2px solid #374151; outline-offset: 2px; transform: scale(1.1); }
+        .fp-ev-color-dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.15); cursor: pointer; flex-shrink: 0; padding: 0; transition: transform .1s; }
+        .fp-ev-color-dot:hover { transform: scale(1.3); }
+        .fp-ev-color-row { padding: 6px 8px 6px 22px; background: #f9fafb; border-radius: 6px; margin: -2px 0 6px; }
+
+        /* ── Done button ── */
+        .fp-done-row { padding: 12px 16px; border-top: 1px solid #eee; flex-shrink: 0; }
+        .fp-done-btn { width: 100%; padding: 10px; background: #1a1f36; color: #fff; border: none; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+        .fp-done-btn:hover { background: #2d3561; }
 
         /* ── Mobile ── */
         @media (max-width: 900px) {
@@ -375,6 +389,9 @@ let activeFilter       = 'all';
 let personalEvents     = [];
 let addModalType       = 'personal';
 let selectedEventColor = '#1a1f36';
+let modalEventColor    = '#607d8b'; // color used when adding events from the feedback modal
+
+const EV_COLORS = ['#1a1f36','#3b82f6','#8b5cf6','#e91e63','#f59e0b','#10b981','#ef4444','#f97316','#06b6d4','#607d8b'];
 
 const TODAY = new Date();
 
@@ -827,21 +844,47 @@ function renderFeedbackPanel(fp, dateStr, evNames, data) {
                    <button class="fp-send" onclick="postComment('${dateStr}')">Send</button>
                </div>`
             : `<div class="fp-login-prompt"><a href="/login.html">Login</a> to react and leave comments</div>`}
-        ${isAdmin ? renderAdminEdit(dateStr, dayEvs, month) : ''}`;
+        ${isAdmin ? renderAdminEdit(dateStr, dayEvs, month) : ''}
+        <div class="fp-done-row">
+            <button class="fp-done-btn" onclick="closeFeedback()">Done</button>
+        </div>`;
+}
+
+function fpSwatches(selectedColor, onclickFn) {
+    return EV_COLORS.map(c =>
+        `<div class="fp-color-swatch${c === selectedColor ? ' selected' : ''}" style="background:${c}" onclick="${onclickFn}(this,'${c}')"></div>`
+    ).join('');
 }
 
 function renderAdminEdit(dateStr, dayEvs, month) {
-    const rows = dayEvs.map((ev, i) =>
-        `<div class="fp-admin-event-row">
+    const rows = dayEvs.map((ev, i) => {
+        const dot = ev.color || '#607d8b';
+        const swatches = EV_COLORS.map(c =>
+            `<div class="fp-color-swatch${c === dot ? ' selected' : ''}" style="background:${c}" onclick="changeEvColor('${month}','${dateStr}',${i},'${c}',this)"></div>`
+        ).join('');
+        return `<div class="fp-admin-event-row" id="fp-evrow-${dateStr}-${i}">
+            <button class="fp-ev-color-dot" style="background:${dot}" onclick="toggleEvColorPicker('${dateStr}',${i})" title="Change color"></button>
             <span>${ev.name}</span>
             <button class="fp-admin-del" onclick="adminDeleteEvent('${month}','${dateStr}',${i})" title="Remove">✕</button>
-        </div>`
+        </div>
+        <div class="fp-ev-color-row" id="fp-evpicker-${dateStr}-${i}" style="display:none">
+            <div class="fp-color-swatches">${swatches}</div>
+        </div>`;
+    }).join('');
+
+    const addSwatches = EV_COLORS.map(c =>
+        `<div class="fp-color-swatch${c === modalEventColor ? ' selected' : ''}" style="background:${c}" onclick="setModalColor(this,'${c}')"></div>`
     ).join('');
+
     return `<div class="fp-admin-edit">
         <div class="fp-admin-title">
             <span style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Edit Events</span>
         </div>
         <div id="admin-ev-list-${dateStr}">${rows || '<div style="font-size:.8rem;color:#ccc;margin-bottom:6px">No events — add one below</div>'}</div>
+        <div style="margin-bottom:6px">
+            <div style="font-size:.7rem;color:#aaa;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Color for new event</div>
+            <div class="fp-color-swatches" id="modal-ev-swatches">${addSwatches}</div>
+        </div>
         <div class="fp-admin-add">
             <input type="text" id="admin-ev-input-${dateStr}" placeholder="Event name…" />
             <button class="fp-admin-save" onclick="adminAddEvent('${month}','${dateStr}')">Add</button>
@@ -849,16 +892,45 @@ function renderAdminEdit(dateStr, dayEvs, month) {
     </div>`;
 }
 
+function setModalColor(el, color) {
+    modalEventColor = color;
+    document.querySelectorAll('#modal-ev-swatches .fp-color-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+function toggleEvColorPicker(dateStr, idx) {
+    const picker = document.getElementById(`fp-evpicker-${dateStr}-${idx}`);
+    if (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+async function changeEvColor(month, dateStr, idx, color, swatchEl) {
+    const dayEvs = (calendarData[month]?.events || []).filter(e => e.date === dateStr);
+    const ev = dayEvs[idx];
+    if (!ev) return;
+    const masterIdx = calendarData[month].events.findIndex(e => e.date === ev.date && e.name === ev.name);
+    if (masterIdx >= 0) calendarData[month].events[masterIdx].color = color;
+    await saveCalendar();
+    // Update dot color and swatch selection without full re-render
+    const dot = document.querySelector(`#fp-evrow-${dateStr}-${idx} .fp-ev-color-dot`);
+    if (dot) dot.style.background = color;
+    const picker = document.getElementById(`fp-evpicker-${dateStr}-${idx}`);
+    if (picker) {
+        picker.querySelectorAll('.fp-color-swatch').forEach(s => s.classList.remove('selected'));
+        swatchEl.classList.add('selected');
+        picker.style.display = 'none';
+    }
+    buildGrid(); markPastMonths();
+}
+
 async function adminAddEvent(month, dateStr) {
     const input = document.getElementById(`admin-ev-input-${dateStr}`);
     const name  = input.value.trim();
     if (!name) return;
     calendarData[month].events = calendarData[month].events || [];
-    calendarData[month].events.push({ date: dateStr, name });
+    calendarData[month].events.push({ date: dateStr, name, color: modalEventColor });
     calendarData[month].events.sort((a,b) => a.date.localeCompare(b.date));
     await saveCalendar();
     input.value = '';
-    // Refresh the panel
     openFeedback(dateStr, document.getElementById(`cell-${dateStr}`));
     buildGrid(); markPastMonths();
 }
