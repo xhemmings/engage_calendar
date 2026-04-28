@@ -49,6 +49,8 @@
         .month-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.08); overflow: hidden; cursor: pointer; transition: transform .15s, box-shadow .15s; }
         .month-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
         .month-card.active { outline: 3px solid #1a1f36; }
+        .month-card.past { opacity: 0.45; filter: grayscale(0.6); }
+        .month-card.past:hover { transform: none; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
         .card-header { padding: 12px 14px; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
         .chevron { font-size: .7rem; opacity: .8; transition: transform .2s; }
         .month-card.active .chevron { transform: rotate(180deg); }
@@ -300,6 +302,22 @@ function buildGrid() {
             </div>`;
         card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
+    });
+    markPastMonths();
+}
+
+function markPastMonths() {
+    const now = new Date();
+    monthKeys.forEach(month => {
+        const events = calendarData[month]?.events || [];
+        if (!events.length) return;
+        // Get the last day of this month from event dates
+        const dates = events.map(e => new Date(e.date + 'T00:00:00'));
+        const year  = dates[0].getFullYear();
+        const mIdx  = dates[0].getMonth();
+        const lastDay = new Date(year, mIdx + 1, 0); // last day of month
+        const card = document.getElementById(`card-${month}`);
+        if (card) card.classList.toggle('past', lastDay < now);
     });
 }
 

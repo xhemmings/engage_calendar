@@ -155,6 +155,8 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.13);
         }
         .month-card.active { outline: 3px solid #1a1f36; }
+        .month-card.past { opacity: 0.45; filter: grayscale(0.6); }
+        .month-card.past:hover { transform: none; }
         .card-header {
             padding: 14px 16px;
             color: #fff;
@@ -538,6 +540,15 @@ function renderGrid() {
             </div>`;
         card.onclick = () => toggleCalPanel(month);
         grid.appendChild(card);
+    });
+    // Fade past months
+    const now = new Date();
+    Object.keys(calendarData).forEach(month => {
+        const events = calendarData[month]?.events || [];
+        if (!events.length) return;
+        const d = new Date(events[0].date + 'T00:00:00');
+        const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+        document.getElementById(`card-${month}`)?.classList.toggle('past', lastDay < now);
     });
 }
 

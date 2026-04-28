@@ -113,23 +113,23 @@ async function sendWhatsAppOTP(phone, otp) {
 }
 
 async function sendEmailOTP(email, otp) {
-  if (!process.env.RESEND_API_KEY) { console.log(`[DEV] Email OTP for ${email}: ${otp}`); return; }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: 'Engagement Calendar <onboarding@resend.dev>',
-      to: [email],
-      subject: 'Your verification code',
-      html: `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:420px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px">
-        <div style="font-size:1.2rem;font-weight:700;color:#1a1f36;margin-bottom:8px">Engagement Calendar</div>
-        <p style="color:#555;margin-bottom:24px">Your verification code is:</p>
-        <div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1a1f36;padding:20px 24px;background:#eef0f3;border-radius:10px;text-align:center">${otp}</div>
-        <p style="color:#aaa;font-size:13px;margin-top:20px">Expires in 5 minutes. Do not share this code.</p>
-      </div>`,
-    }),
+  if (!process.env.EMAIL_USER) { console.log(`[DEV] Email OTP for ${email}: ${otp}`); return; }
+  const nodemailer  = require('nodemailer');
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
-  if (!res.ok) throw new Error((await res.json().catch(()=>({}))).message || 'Email send failed');
+  await transporter.sendMail({
+    from: `"Engagement Calendar" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Your verification code',
+    html: `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:420px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px">
+      <div style="font-size:1.2rem;font-weight:700;color:#1a1f36;margin-bottom:8px">Engagement Calendar</div>
+      <p style="color:#555;margin-bottom:24px">Your verification code is:</p>
+      <div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1a1f36;padding:20px 24px;background:#eef0f3;border-radius:10px;text-align:center">${otp}</div>
+      <p style="color:#aaa;font-size:13px;margin-top:20px">Expires in 5 minutes. Do not share this code.</p>
+    </div>`,
+  });
 }
 
 // Route OTP by role: superadmin → WhatsApp, everyone else → email
