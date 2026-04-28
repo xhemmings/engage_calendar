@@ -131,7 +131,52 @@
         .bookmark-item:last-child { border-bottom: none; }
         .bookmark-item:hover { color: #1a1f36; }
 
-        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .well { display: none; } .main { padding: 0; } .feedback-panel { width: 100%; border-left: none; border-top: 1px solid #eee; max-height: 400px; } }
+        /* ── Mobile ── */
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; padding: 12px; }
+            .well { display: none; }
+            .main { padding: 0; }
+        }
+        @media (max-width: 768px) {
+            header { padding: 0 14px; height: 52px; }
+            header h1 { font-size: .95rem; }
+            .nav-link { padding: 6px 8px; font-size: .76rem; }
+            .nav-btn-logout { padding: 6px 8px; font-size: .76rem; }
+
+            .months-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card-header { padding: 10px 12px; font-size: .9rem; }
+            .card-body { padding: 8px 12px 10px; }
+
+            /* Expanded panel */
+            .expanded-panel { margin-top: 12px; border-radius: 8px; }
+            .exp-header { padding: 12px 14px; }
+            .exp-title { font-size: .95rem; }
+            .exp-nav-btn { width: 28px; height: 28px; font-size: .85rem; }
+
+            /* Calendar grid — keep 7 cols, reduce size */
+            .cal-grid-section { padding: 10px 6px 12px; }
+            .cal-grid { gap: 2px; }
+            .cal-day-name { font-size: .6rem; padding-bottom: 4px; }
+            .cal-cell { min-height: 56px; padding: 4px 3px; }
+            .cell-num { font-size: .75rem; margin-bottom: 1px; }
+            .cell-num.today-num { width: 20px; height: 20px; font-size: .72rem; }
+            .cell-ev-tag { font-size: .58rem; padding: 1px 3px; margin-bottom: 1px; }
+            .cell-reactions { gap: 3px; margin-top: 2px; }
+            .cell-rxn { font-size: .58rem; }
+
+            /* Feedback panel stacks below calendar */
+            .cal-wrap { flex-direction: column; }
+            .feedback-panel { width: 100%; border-left: none; border-top: 1px solid #eee; max-height: 380px; }
+            .rxn-btn { padding: 10px; font-size: .9rem; }
+            .fp-compose textarea { height: 50px; }
+        }
+        @media (max-width: 420px) {
+            .months-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .card-dots { gap: 3px; }
+            /* Hide nav text labels, keep emoji icons */
+            .nav-link { font-size: 0; padding: 6px 10px; }
+            .nav-link::first-letter { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
