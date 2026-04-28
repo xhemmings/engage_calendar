@@ -40,6 +40,18 @@
         .btn-green { background: #2e7d32; }
         .btn-green:hover { background: #1b5e20; }
 
+        /* Invite type picker */
+        .invite-picker { display: flex; gap: 10px; flex-wrap: wrap; }
+        .invite-card { border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; background: #fff; cursor: pointer; transition: all .15s; min-width: 150px; text-align: left; }
+        .invite-card:hover { border-color: #1a1f36; background: #f8faff; }
+        .invite-card-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; margin-bottom: 8px; }
+        .invite-card-title { font-size: .85rem; font-weight: 700; color: #1a1f36; margin-bottom: 2px; }
+        .invite-card-meta { font-size: .72rem; color: #888; }
+        .invite-card.multi { border-color: #c7d2fe; background: #eef2ff; }
+        .invite-card.multi:hover { border-color: #818cf8; background: #e0e7ff; }
+        .invite-card.admin-card { border-color: #d1fae5; background: #f0fdf4; }
+        .invite-card.admin-card:hover { border-color: #34d399; background: #ecfdf5; }
+
         /* Search */
         .search-bar { margin-bottom: 14px; position: relative; }
         .search-bar input { width: 100%; padding: 11px 14px 11px 38px; border: 1.5px solid #e0e0e0; border-radius: 9px; font-size: .92rem; outline: none; transition: border-color .15s; background: #fff; }
@@ -336,23 +348,30 @@ async function logout() { await fetch('/api/logout',{method:'POST'}); location.h
 
 function buildInviteButtons() {
     const el = document.getElementById('invite-buttons');
-    if (myRole === 'superadmin') {
-        el.innerHTML = `
-            <button class="btn-primary btn-green" onclick="generateInvite('viewer')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                Invite Viewer
-            </button>
-            <button class="btn-primary" onclick="generateInvite('admin')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                Invite Admin
-            </button>`;
-    } else {
-        el.innerHTML = `
-            <button class="btn-primary btn-green" onclick="generateInvite('viewer')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                Invite Viewer
-            </button>`;
-    }
+    el.innerHTML = `<div class="invite-picker">
+        <button class="invite-card" onclick="generateInvite('viewer', false)">
+            <div class="invite-card-icon" style="background:#e8f5e9;color:#2e7d32">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </div>
+            <div class="invite-card-title">Single Invite</div>
+            <div class="invite-card-meta">1 person · 48 hours</div>
+        </button>
+        <button class="invite-card multi" onclick="generateInvite('viewer', true)">
+            <div class="invite-card-icon" style="background:#e0e7ff;color:#4338ca">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="invite-card-title">Group Link</div>
+            <div class="invite-card-meta">Multiple viewers · 1 hour</div>
+        </button>
+        ${myRole === 'superadmin' ? `
+        <button class="invite-card admin-card" onclick="generateInvite('admin', false)">
+            <div class="invite-card-icon" style="background:#d1fae5;color:#065f46">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="invite-card-title">Invite Admin</div>
+            <div class="invite-card-meta">1 admin · 48 hours</div>
+        </button>` : ''}
+    </div>`;
 }
 
 async function loadUsers() {
@@ -437,7 +456,8 @@ function renderInvites() {
         const status = inv.used ? 'used' : new Date(inv.expires_at) < now ? 'expired' : 'pending';
         const badgeCls = status === 'used' ? 'inv-used' : status === 'expired' ? 'inv-expired' : 'inv-pending';
         const statusLabel = status === 'used' ? 'Used' : status === 'expired' ? 'Expired' : 'Pending';
-        const usedBy = inv.used_by || '—';
+        const isMulti = inv.multi_use;
+        const usedBy = isMulti ? (inv.use_count > 0 ? `${inv.use_count} used` : 'None yet') : (inv.used_by || '—');
         const inviteUrl = window.location.origin + '/invite.html?token=' + inv.token;
 
         const actions = status === 'pending'
@@ -450,7 +470,10 @@ function renderInvites() {
             : '<span style="color:#ddd;font-size:.76rem">—</span>';
 
         return `<tr>
-            <td><span class="role-badge role-${inv.invite_role}">${inv.invite_role === 'admin' ? 'Admin' : 'Viewer'}</span></td>
+            <td>
+                <span class="role-badge role-${inv.invite_role}">${inv.invite_role === 'admin' ? 'Admin' : 'Viewer'}</span>
+                ${isMulti ? `<span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:8px;font-size:.66rem;font-weight:700;background:#e0e7ff;color:#4338ca">GROUP</span>` : ''}
+            </td>
             <td><span class="inv-badge ${badgeCls}">${statusLabel}</span></td>
             <td style="color:#555;font-size:.84rem">${usedBy}</td>
             <td style="color:#888;font-size:.82rem">${inv.created_by || '—'}</td>
@@ -462,14 +485,15 @@ function renderInvites() {
 }
 
 // ── Invite ────────────────────────────────────────────────────────────────────
-async function generateInvite(role) {
-    const r = await fetch('/api/invite/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ role }) });
+async function generateInvite(role, multiUse = false) {
+    const r = await fetch('/api/invite/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ role, multiUse }) });
     const d = await r.json();
     if (!d.ok) { alert('Failed: ' + d.error); return; }
     document.getElementById('invite-link-text').textContent = d.url;
-    document.getElementById('invite-modal-desc').textContent = role === 'admin'
-        ? 'Admin invite — recipient can edit the calendar. Expires 48 hrs, single use.'
-        : 'Viewer invite — recipient can view, react and comment. Expires 48 hrs, single use.';
+    document.getElementById('invite-modal-desc').textContent =
+        role === 'admin'    ? 'Admin invite — recipient can edit the calendar. Single use, expires in 48 hours.' :
+        multiUse            ? 'Group link — share with multiple viewers. Expires in 1 hour.' :
+                              'Single viewer invite — one person only, expires in 48 hours.';
     document.getElementById('copy-ok').style.display = 'none';
     openModal('invite-modal');
     await loadInvites();

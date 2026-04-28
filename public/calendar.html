@@ -85,8 +85,8 @@
         .exp-close:hover { background: rgba(255,255,255,.35); }
 
         /* ── Calendar grid ── */
-        .cal-wrap { display: flex; gap: 0; }
-        .cal-grid-section { flex: 1; padding: 20px; min-width: 0; }
+        .cal-wrap { display: block; }
+        .cal-grid-section { padding: 20px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 0; border: 1px solid #d0d5dd; }
         .cal-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #888; text-transform: uppercase; padding: 6px 2px; background: #f8f9fa; border-bottom: 1px solid #d0d5dd; border-right: 1px solid #d0d5dd; }
         .cal-day-name:last-child { border-right: none; }
@@ -96,26 +96,27 @@
         .cal-cell.weekend { background: #f5f5f5; }
         .cal-cell.has-event    { background: #f0fdf4; }
         .cal-cell.has-birthday { background: #fffbeb; }
-        .cal-cell.has-holiday  { background: #fff5f5; }
+        .cal-cell.has-holiday  { background: #f5f3ff; }
         .cal-cell.today .cell-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
         .cal-cell.clickable { cursor: pointer; }
         .cal-cell.clickable:hover { background: #eff6ff; }
         .cal-cell.selected { outline: 2px solid #1a1f36; outline-offset: -2px; }
         .cell-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
         .cell-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.06); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cell-ev-tag.holiday  { background: #ffcdd2; color: #b71c1c; font-weight: 600; }
+        .cell-ev-tag.holiday  { background: #ede9fe; color: #6d28d9; font-weight: 600; }
         .cell-ev-tag.birthday { background: #fff3cd; color: #856404; font-weight: 600; }
         .cell-reactions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
         .cell-rxn { font-size: .65rem; color: #888; display: flex; align-items: center; gap: 2px; }
 
-        /* ── Feedback panel ── */
-        .feedback-panel { width: 320px; flex-shrink: 0; border-left: 1px solid #eee; display: none; flex-direction: column; max-height: 540px; }
-        .feedback-panel.open { display: flex; }
+        /* ── Feedback overlay modal ── */
+        .feedback-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .feedback-overlay.open { display: flex; }
+        .feedback-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 460px; max-height: 80vh; box-shadow: 0 12px 50px rgba(0,0,0,.22); display: flex; flex-direction: column; overflow: hidden; }
         .fp-header { padding: 16px 16px 12px; border-bottom: 1px solid #eee; }
         .fp-event-name { font-weight: 700; color: #1a1f36; font-size: .95rem; margin-bottom: 4px; }
         .fp-event-date { font-size: .78rem; color: #aaa; }
         .fp-reactions { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #eee; }
-        .rxn-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1.5px solid #eee; background: #fff; cursor: pointer; font-size: .88rem; font-weight: 600; color: #555; transition: all .15s; flex: 1; justify-content: center; }
+        .rxn-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 9px; border: 1.5px solid #e5e7eb; background: #fff; cursor: pointer; font-size: .88rem; font-weight: 600; color: #555; transition: all .15s; flex: 1; justify-content: center; }
         .rxn-btn:hover { border-color: #bbb; }
         .rxn-btn.liked    { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
         .rxn-btn.disliked { background: #fdecea; border-color: #ef5350; color: #c62828; }
@@ -196,6 +197,12 @@
         .am-save:hover { background: #2d3561; }
         .am-cancel { padding: 11px 16px; background: #f0f0f0; color: #444; border: none; border-radius: 8px; cursor: pointer; }
 
+        /* ── Color picker ── */
+        .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+        .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: transform .12s; }
+        .color-swatch:hover { transform: scale(1.18); }
+        .color-swatch.selected { outline: 2.5px solid #1a1f36; outline-offset: 2px; transform: scale(1.1); }
+
         /* ── Mobile ── */
         @media (max-width: 900px) {
             .layout { grid-template-columns: 1fr; padding: 12px; }
@@ -236,11 +243,9 @@
             .cell-reactions { gap: 3px; margin-top: 2px; }
             .cell-rxn { font-size: .58rem; }
 
-            /* Feedback panel stacks below calendar */
-            .cal-wrap { flex-direction: column; }
-            .feedback-panel { width: 100%; border-left: none; border-top: 1px solid #eee; max-height: 380px; }
             .rxn-btn { padding: 10px; font-size: .9rem; }
             .fp-compose textarea { height: 50px; }
+            .feedback-modal { max-height: 90vh; }
         }
         @media (max-width: 420px) {
             .months-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
@@ -269,7 +274,7 @@
 <div class="layout">
     <aside class="well" id="left-well">
         <h3>Legend</h3>
-        <div class="legend-item"><div class="legend-dot" style="background:#d32f2f"></div>Public Holiday</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>Public Holiday</div>
         <div class="legend-item"><div class="legend-dot" style="background:#90a4ae"></div>Event</div>
         <div class="legend-item"><div class="legend-swatch" style="background:#fff5f5;border:1px solid #ddd"></div>Holiday day</div>
         <div class="legend-item"><div class="legend-swatch" style="background:#f5f5f5;border:1px solid #ddd"></div>Weekend</div>
@@ -331,6 +336,21 @@
         <h3 id="add-modal-title">Add Event</h3>
         <div class="am-field"><label>Date</label><input type="date" id="add-date" /></div>
         <div class="am-field"><label>Event Name</label><input type="text" id="add-name" placeholder="What's happening?" /></div>
+        <div class="am-field" id="add-color-field" style="display:none">
+            <label>Color</label>
+            <div class="color-swatches" id="color-swatches">
+                <div class="color-swatch selected" data-color="#1a1f36" style="background:#1a1f36"></div>
+                <div class="color-swatch" data-color="#3b82f6" style="background:#3b82f6"></div>
+                <div class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6"></div>
+                <div class="color-swatch" data-color="#e91e63" style="background:#e91e63"></div>
+                <div class="color-swatch" data-color="#f59e0b" style="background:#f59e0b"></div>
+                <div class="color-swatch" data-color="#10b981" style="background:#10b981"></div>
+                <div class="color-swatch" data-color="#ef4444" style="background:#ef4444"></div>
+                <div class="color-swatch" data-color="#f97316" style="background:#f97316"></div>
+                <div class="color-swatch" data-color="#06b6d4" style="background:#06b6d4"></div>
+                <div class="color-swatch" data-color="#607d8b" style="background:#607d8b"></div>
+            </div>
+        </div>
         <div class="am-btns">
             <button class="am-cancel" onclick="closeAddModal()">Cancel</button>
             <button class="am-save" onclick="submitAdd()">Add</button>
@@ -338,17 +358,23 @@
     </div>
 </div>
 
+<!-- Feedback overlay modal -->
+<div class="feedback-overlay" id="feedback-overlay" onclick="if(event.target===this)closeFeedback()">
+    <div class="feedback-modal" id="feedback-panel"></div>
+</div>
+
 <script>
-let calendarData      = {};
-let birthdayEvents    = [];
-let monthKeys         = [];
-let activeMonth       = null;
-let expandedEl        = null;
-let me                = null;
-let activeFeedbackKey = null;
-let activeFilter      = 'all'; // 'all' | 'birthdays'
-let personalEvents    = [];    // current user's personal events
-let addModalType      = 'personal'; // 'personal' | 'team'
+let calendarData       = {};
+let birthdayEvents     = [];
+let monthKeys          = [];
+let activeMonth        = null;
+let expandedEl         = null;
+let me                 = null;
+let activeFeedbackKey  = null;
+let activeFilter       = 'all';
+let personalEvents     = [];
+let addModalType       = 'personal';
+let selectedEventColor = '#1a1f36';
 
 const TODAY = new Date();
 
@@ -398,6 +424,7 @@ async function loadData() {
     birthdayEvents = await bdRes.json();
     monthKeys = Object.keys(calendarData).sort((a,b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
     buildGrid(); buildUpcoming(); buildMonthNav();
+    if (me) loadBookmarks(); // re-render with event names now data is ready
 }
 
 async function loadPersonalEvents() {
@@ -418,7 +445,19 @@ async function loadBookmarks() {
     sec.style.display = 'block';
     list.innerHTML = bms.map(b => {
         const date = b.event_key;
-        return `<div class="bookmark-item" onclick="jumpToDate('${date}')">${formatShort(date)}</div>`;
+        const names = Object.values(calendarData)
+            .flatMap(m => m.events || [])
+            .filter(e => e.date === date)
+            .map(e => e.name);
+        birthdayEvents.filter(bd => bd.date === date).forEach(bd =>
+            names.push(bd.name.replace('🎂 ','').replace("'s Birthday",' birthday'))
+        );
+        const title = names[0] || 'Bookmarked event';
+        const extra = names.length > 1 ? ` +${names.length - 1}` : '';
+        return `<div class="bookmark-item" onclick="jumpToDate('${date}')">
+            <div style="font-weight:600;color:#1a1f36;font-size:.83rem">${title}${extra}</div>
+            <div style="font-size:.72rem;color:#aaa;margin-top:1px">${formatShort(date)}</div>
+        </div>`;
     }).join('');
 }
 
@@ -490,7 +529,7 @@ function buildUpcoming() {
 
     const html = all.map(ev => {
         const isPast = new Date(ev.date + 'T23:59:59') < now;
-        const dotColor = ev.isBirthday ? '#f59e0b' : isHoliday(ev) ? '#d32f2f' : ev.color;
+        const dotColor = ev.isBirthday ? '#f59e0b' : isHoliday(ev) ? '#7c3aed' : (ev.color || '#90a4ae');
         return `<div class="upcoming-event${isPast ? ' is-past' : ''}" onclick="openMonth('${ev.month}','${ev.date}')">
             <div class="ev-date">${formatShort(ev.date)}</div>
             <div class="ev-name"><span class="ev-dot" style="background:${dotColor}"></span>${ev.name}</div>
@@ -530,7 +569,7 @@ function buildGrid() {
             </div>
             <div class="card-body">
                 <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
-                <div class="card-dots">${events.map(ev=>`<div class="card-dot ${isHoliday(ev)?'holiday':'normal'}" title="${ev.name}"></div>`).join('')}</div>
+                <div class="card-dots">${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':'#90a4ae')}" title="${ev.name}"></div>`).join('')}</div>
             </div>`;
         card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
@@ -583,11 +622,12 @@ function openMonth(month, highlightDate = null) {
 
 function closeExpanded() {
     if (!expandedEl) return;
+    closeFeedback();
     expandedEl.card.classList.remove('active');
     expandedEl.panel.classList.remove('open');
     expandedEl.panel.innerHTML = '';
     document.getElementById(`mnl-${activeMonth}`)?.classList.remove('active');
-    activeMonth = null; expandedEl = null; activeFeedbackKey = null;
+    activeMonth = null; expandedEl = null;
 }
 
 function navigateMonth(dir) {
@@ -598,6 +638,7 @@ function navigateMonth(dir) {
 
 // ── Render expanded panel ─────────────────────────────────────────────────────
 function renderExpandedPanel(panel, month, highlightDate) {
+    closeFeedback();
     const data   = calendarData[month];
     const events = data.events || [];
     const idx    = monthKeys.indexOf(month);
@@ -653,9 +694,13 @@ function renderExpandedPanel(panel, month, highlightDate) {
         if (hasEv)  cls += ' clickable';
         if (isHl)   cls += ' selected';
 
-        const evTags = dayEvs.map(ev =>
-            `<span class="cell-ev-tag ${ev.isPersonal ? 'personal' : ev.isBirthday ? 'birthday' : isHoliday(ev) ? 'holiday' : ''}">${ev.name}</span>`
-        ).join('');
+        const evTags = dayEvs.map(ev => {
+            const tagCls = ev.isPersonal ? 'personal' : ev.isBirthday ? 'birthday' : isHoliday(ev) ? 'holiday' : '';
+            const tagStyle = (ev.color && !ev.isBirthday && !ev.isPersonal && !isHoliday(ev))
+                ? ` style="background:${ev.color}22;color:${ev.color}"` : '';
+            const label = isHoliday(ev) ? `✨ ${ev.name}` : ev.name;
+            return `<span class="cell-ev-tag ${tagCls}"${tagStyle}>${label}</span>`;
+        }).join('');
 
         const rxnBar = hasEv ? `<div class="cell-reactions" id="rxns-${dateStr}"></div>` : '';
 
@@ -680,7 +725,6 @@ function renderExpandedPanel(panel, month, highlightDate) {
             <div class="cal-grid-section">
                 <div class="cal-grid">${cells}</div>
             </div>
-            <div class="feedback-panel" id="feedback-panel"></div>
         </div>`;
 
     // Load reaction counts for all event days
@@ -702,22 +746,35 @@ async function loadCellReactions(dateStr) {
         const r = await fetch(`/api/events/${encodeURIComponent(dateStr)}/feedback`);
         const d = await r.json();
         el.innerHTML = '';
-        if (d.reactions.like)    el.innerHTML += `<span class="cell-rxn">👍 ${d.reactions.like}</span>`;
-        if (d.reactions.dislike) el.innerHTML += `<span class="cell-rxn">👎 ${d.reactions.dislike}</span>`;
-        if (d.comments.length)   el.innerHTML += `<span class="cell-rxn">💬 ${d.comments.length}</span>`;
+        const rxnUp   = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+        const rxnDown = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
+        const rxnChat = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+        if (d.reactions.like)    el.innerHTML += `<span class="cell-rxn">${rxnUp} ${d.reactions.like}</span>`;
+        if (d.reactions.dislike) el.innerHTML += `<span class="cell-rxn">${rxnDown} ${d.reactions.dislike}</span>`;
+        if (d.comments.length)   el.innerHTML += `<span class="cell-rxn">${rxnChat} ${d.comments.length}</span>`;
     } catch {}
 }
 
 // ── Feedback panel ────────────────────────────────────────────────────────────
+function closeFeedback() {
+    const overlay = document.getElementById('feedback-overlay');
+    if (overlay) overlay.classList.remove('open');
+    if (activeFeedbackKey) {
+        document.getElementById(`cell-${activeFeedbackKey}`)?.classList.remove('selected');
+        activeFeedbackKey = null;
+    }
+}
+
 async function openFeedback(dateStr, cellEl) {
-    await authReady; // ensure me is set before rendering bookmark/react buttons
+    await authReady;
     if (activeFeedbackKey) document.getElementById(`cell-${activeFeedbackKey}`)?.classList.remove('selected');
     activeFeedbackKey = dateStr;
     cellEl.classList.add('selected');
 
-    const fp = document.getElementById('feedback-panel');
-    fp.className = 'feedback-panel open';
-    fp.innerHTML = '<div style="padding:20px;color:#bbb;font-size:.88rem">Loading…</div>';
+    const overlay = document.getElementById('feedback-overlay');
+    const fp      = document.getElementById('feedback-panel');
+    overlay.classList.add('open');
+    fp.innerHTML = '<div style="padding:24px;color:#bbb;font-size:.88rem;text-align:center">Loading…</div>';
 
     const evs  = calendarData[activeMonth]?.events?.filter(e => e.date === dateStr) || [];
     const evNames = evs.map(e=>e.name).join(', ') || 'Event';
@@ -740,6 +797,8 @@ function renderFeedbackPanel(fp, dateStr, evNames, data) {
     const month   = activeMonth;
     const dayEvs  = (calendarData[month]?.events || []).filter(e => e.date === dateStr);
 
+    const thumbUp   = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+    const thumbDown = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
     fp.innerHTML = `
         <div class="fp-header">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -747,14 +806,17 @@ function renderFeedbackPanel(fp, dateStr, evNames, data) {
                     <div class="fp-event-name">${evNames}</div>
                     <div class="fp-event-date">${formatShort(dateStr)}</div>
                 </div>
-                ${canInteract ? `<button class="bookmark-btn ${bmClass}" id="bm-btn-${dateStr}" onclick="toggleBookmark('${dateStr}')" title="Bookmark">&#128278;</button>` : ''}
+                <div style="display:flex;align-items:center;gap:6px">
+                    ${canInteract ? `<button class="bookmark-btn ${bmClass}" id="bm-btn-${dateStr}" onclick="toggleBookmark('${dateStr}')" title="Bookmark">&#128278;</button>` : ''}
+                    <button onclick="closeFeedback()" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:1.2rem;padding:0 2px;line-height:1;transition:color .1s" onmouseover="this.style.color='#666'" onmouseout="this.style.color='#bbb'">&#x2715;</button>
+                </div>
             </div>
         </div>
         <div class="fp-reactions">
             ${canInteract
-                ? `<button class="rxn-btn ${likedClass}" id="like-btn" onclick="react('${dateStr}','like')">👍 <span class="count" id="like-count">${data.reactions.like}</span></button>
-                   <button class="rxn-btn ${dislikedClass}" id="dislike-btn" onclick="react('${dateStr}','dislike')">👎 <span class="count" id="dislike-count">${data.reactions.dislike}</span></button>`
-                : `<span style="font-size:.82rem;color:#aaa;padding:8px 0">👍 ${data.reactions.like} &nbsp; 👎 ${data.reactions.dislike}</span>`}
+                ? `<button class="rxn-btn ${likedClass}" id="like-btn" onclick="react('${dateStr}','like')">${thumbUp}<span class="count" id="like-count">${data.reactions.like}</span></button>
+                   <button class="rxn-btn ${dislikedClass}" id="dislike-btn" onclick="react('${dateStr}','dislike')">${thumbDown}<span class="count" id="dislike-count">${data.reactions.dislike}</span></button>`
+                : `<div style="display:flex;gap:16px;padding:6px 0"><span style="display:flex;align-items:center;gap:6px;font-size:.84rem;color:#aaa">${thumbUp}${data.reactions.like}</span><span style="display:flex;align-items:center;gap:6px;font-size:.84rem;color:#aaa">${thumbDown}${data.reactions.dislike}</span></div>`}
         </div>
         <div class="fp-comments" id="fp-comments-${dateStr}">
             ${renderComments(data.comments, dateStr)}
@@ -909,12 +971,25 @@ function openAddModal(type) {
     document.getElementById('fab-menu').classList.remove('open');
     document.getElementById('fab-btn').textContent = '+';
     document.getElementById('add-modal-title').textContent =
-        type === 'team' ? '📅 Add Team Event' : '📝 Add Personal Event';
-    // Pre-fill date with selected day if any
+        type === 'team' ? 'Add Team Event' : 'Add Personal Event';
+    // Show color picker only for team events
+    const cf = document.getElementById('add-color-field');
+    if (cf) cf.style.display = type === 'team' ? 'block' : 'none';
+    // Reset to default color
+    selectedEventColor = '#1a1f36';
+    document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('selected', i === 0));
     if (activeFeedbackKey) document.getElementById('add-date').value = activeFeedbackKey;
     document.getElementById('add-overlay').classList.add('open');
     document.getElementById('add-name').focus();
 }
+
+document.addEventListener('click', e => {
+    const sw = e.target.closest('.color-swatch');
+    if (!sw) return;
+    selectedEventColor = sw.dataset.color;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    sw.classList.add('selected');
+});
 
 function closeAddModal() {
     document.getElementById('add-overlay').classList.remove('open');
@@ -940,7 +1015,9 @@ async function submitAdd() {
         const mName = MONTH_ORDER[m-1];
         if (!calendarData[mName]) calendarData[mName] = { color:'#607d8b', events:[] };
         calendarData[mName].events = calendarData[mName].events || [];
-        calendarData[mName].events.push({ date, name });
+        const evObj = { date, name };
+        if (selectedEventColor) evObj.color = selectedEventColor;
+        calendarData[mName].events.push(evObj);
         calendarData[mName].events.sort((a,b) => a.date.localeCompare(b.date));
         await saveCalendar();
         if (!monthKeys.includes(mName)) { monthKeys = Object.keys(calendarData).sort((a,b) => MONTH_ORDER.indexOf(a)-MONTH_ORDER.indexOf(b)); buildGrid(); buildMonthNav(); }

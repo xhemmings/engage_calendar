@@ -41,6 +41,8 @@ async function initDB() {
       used_at     TIMESTAMPTZ
     );
     ALTER TABLE invites ADD COLUMN IF NOT EXISTS invite_role TEXT DEFAULT 'viewer';
+    ALTER TABLE invites ADD COLUMN IF NOT EXISTS multi_use  BOOLEAN DEFAULT false;
+    ALTER TABLE invites ADD COLUMN IF NOT EXISTS use_count  INTEGER DEFAULT 0;
 
     CREATE TABLE IF NOT EXISTS event_reactions (
       event_key  TEXT NOT NULL,
@@ -296,32 +298,37 @@ app.post('/api/users/:username/reset-password', requireAdmin, async (req, res) =
 
 // ── Invites ───────────────────────────────────────────────────────────────────
 app.post('/api/invite/generate', requireAdmin, async (req, res) => {
-  const me   = getSession(req);
-  // Admins can only invite viewers; superadmin can invite admin or viewer
-  const requestedRole = req.body?.role;
-  const role = me.role === 'superadmin' && requestedRole === 'admin' ? 'admin' : 'viewer';
+  const me = getSession(req);
+  const { role: requestedRole, multiUse } = req.body || {};
+  // Multi-use is always viewer-only; admins can only invite viewers
+  const isMultiUse = multiUse === true;
+  const role = (!isMultiUse && me.role === 'superadmin' && requestedRole === 'admin') ? 'admin' : 'viewer';
   const token = crypto.randomBytes(24).toString('hex');
-  const expires = new Date(Date.now() + 48 * 60 * 60 * 1000);
-  await pool.query('INSERT INTO invites (token, created_by, invite_role, expires_at) VALUES ($1,$2,$3,$4)', [token, me.username, role, expires]);
+  const expires = new Date(Date.now() + (isMultiUse ? 1 : 48) * 60 * 60 * 1000);
+  await pool.query(
+    'INSERT INTO invites (token, created_by, invite_role, expires_at, multi_use) VALUES ($1,$2,$3,$4,$5)',
+    [token, me.username, role, expires, isMultiUse]
+  );
   const proto = req.get('x-forwarded-proto') || 'http';
   const host  = req.get('host') || `localhost:${PORT}`;
-  res.json({ ok: true, url: `${proto}://${host}/invite.html?token=${token}`, role });
+  res.json({ ok: true, url: `${proto}://${host}/invite.html?token=${token}`, role, multiUse: isMultiUse });
 });
 
 app.get('/api/invite/:token', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM invites WHERE token=$1', [req.params.token]);
   const inv = rows[0];
-  if (!inv)     return res.status(404).json({ error: 'Invalid invite link' });
-  if (inv.used) return res.status(410).json({ error: 'This invite has already been used' });
+  if (!inv) return res.status(404).json({ error: 'Invalid invite link' });
+  if (!inv.multi_use && inv.used) return res.status(410).json({ error: 'This invite has already been used' });
   if (new Date() > new Date(inv.expires_at)) return res.status(410).json({ error: 'Invite has expired' });
-  res.json({ ok: true, createdBy: inv.created_by, role: inv.invite_role });
+  res.json({ ok: true, createdBy: inv.created_by, role: inv.invite_role, multiUse: inv.multi_use });
 });
 
 app.post('/api/invite/:token/claim', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM invites WHERE token=$1', [req.params.token]);
   const inv = rows[0];
-  if (!inv || inv.used || new Date() > new Date(inv.expires_at))
-    return res.status(410).json({ error: 'Invalid or expired invite' });
+  if (!inv) return res.status(410).json({ error: 'Invalid invite link' });
+  if (!inv.multi_use && inv.used) return res.status(410).json({ error: 'This invite has already been used' });
+  if (new Date() > new Date(inv.expires_at)) return res.status(410).json({ error: 'Invite has expired' });
   const { username, phone, firstName, lastName, email, birthday } = req.body || {};
   if (!username || !phone || !firstName || !lastName || !email)
     return res.status(400).json({ error: 'All fields are required' });
@@ -341,9 +348,16 @@ app.post('/api/invite/:token/verify', async (req, res) => {
     const p = jwt.verify(req.cookies.otp_pending || '', JWT_SECRET);
     if (p.otp !== String(otp) || p.inviteToken !== req.params.token)
       return res.status(401).json({ error: 'Incorrect code' });
-    const { rows } = await pool.query('SELECT * FROM invites WHERE token=$1 AND used=false', [p.inviteToken]);
-    if (!rows[0]) return res.status(410).json({ error: 'Invite no longer valid' });
-    await pool.query('UPDATE invites SET used=true, used_by=$1, used_at=NOW() WHERE token=$2', [p.username, p.inviteToken]);
+    const { rows } = await pool.query('SELECT * FROM invites WHERE token=$1', [p.inviteToken]);
+    const inv = rows[0];
+    if (!inv) return res.status(410).json({ error: 'Invite no longer valid' });
+    if (!inv.multi_use && inv.used) return res.status(410).json({ error: 'Invite no longer valid' });
+    if (new Date() > new Date(inv.expires_at)) return res.status(410).json({ error: 'Invite has expired' });
+    if (inv.multi_use) {
+      await pool.query('UPDATE invites SET use_count = COALESCE(use_count,0)+1 WHERE token=$1', [p.inviteToken]);
+    } else {
+      await pool.query('UPDATE invites SET used=true, used_by=$1, used_at=NOW() WHERE token=$2', [p.username, p.inviteToken]);
+    }
     await pool.query('INSERT INTO users (username, phone, role, first_name, last_name, email, birthday, invited_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
       [p.username, p.phone, p.role, p.firstName, p.lastName, p.email, p.birthday||null, rows[0].created_by]);
     res.clearCookie('otp_pending');
