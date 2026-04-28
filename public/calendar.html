@@ -60,7 +60,7 @@
         .card-dot.normal  { background: #90a4ae; }
 
         /* ── Expanded panel ── */
-        .expanded-panel { display: none; grid-column: 1 / -1; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); overflow: hidden; margin-top: 4px; }
+        .expanded-panel { display: none; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); overflow: hidden; margin-top: 16px; }
         .expanded-panel.open { display: block; }
 
         .exp-header { padding: 14px 20px; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -161,6 +161,7 @@
 
     <main class="main">
         <div class="months-grid" id="months-grid"></div>
+        <div class="expanded-panel" id="month-detail"></div>
     </main>
 
     <aside class="well" id="right-well">
@@ -299,11 +300,6 @@ function buildGrid() {
             </div>`;
         card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
-
-        const panel = document.createElement('div');
-        panel.className = 'expanded-panel';
-        panel.id = `panel-${month}`;
-        grid.appendChild(panel);
     });
 }
 
@@ -315,16 +311,16 @@ function toggleMonth(month) {
 
 function openMonth(month, highlightDate = null) {
     if (activeMonth === month && !highlightDate) { closeExpanded(); return; }
-    if (activeMonth && activeMonth !== month) {
+
+    // Deactivate previous card + sidebar link
+    if (activeMonth) {
         document.getElementById(`card-${activeMonth}`)?.classList.remove('active');
-        document.getElementById(`panel-${activeMonth}`)?.classList.remove('open');
-        document.getElementById(`panel-${activeMonth}`).innerHTML = '';
         document.getElementById(`mnl-${activeMonth}`)?.classList.remove('active');
     }
 
     activeMonth = month;
     const card  = document.getElementById(`card-${month}`);
-    const panel = document.getElementById(`panel-${month}`);
+    const panel = document.getElementById('month-detail'); // single shared panel
 
     card.classList.add('active');
     document.getElementById(`mnl-${month}`)?.classList.add('active');

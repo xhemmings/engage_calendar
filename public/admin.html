@@ -190,6 +190,31 @@
         .event-preview:last-child { border-bottom: none; }
         .event-preview.holiday { color: #c62828; font-weight: 600; }
 
+        /* ── Admin calendar panel ── */
+        .admin-cal-panel { display: none; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); overflow: hidden; margin-top: 16px; }
+        .admin-cal-panel.open { display: block; }
+        .acp-header { padding: 14px 20px; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .acp-nav { display: flex; align-items: center; gap: 10px; }
+        .acp-nav-btn { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+        .acp-nav-btn:hover { background: rgba(255,255,255,.4); }
+        .acp-nav-btn:disabled { opacity: .3; cursor: default; }
+        .acp-title { font-size: 1.1rem; font-weight: 700; }
+        .acp-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .acp-close:hover { background: rgba(255,255,255,.4); }
+        .acp-grid-wrap { padding: 16px 20px 20px; }
+        .acp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+        .acp-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #bbb; text-transform: uppercase; padding-bottom: 5px; }
+        .acp-cell { min-height: 72px; border-radius: 8px; padding: 6px 8px; background: #f8f9fa; position: relative; transition: background .12s; border: 2px solid transparent; }
+        .acp-cell.empty { background: transparent; border-color: transparent; }
+        .acp-cell.weekend { background: #f0f0f0; }
+        .acp-cell.has-event { background: #e8f5e9; }
+        .acp-cell.clickable { cursor: pointer; }
+        .acp-cell.clickable:hover { background: #dbeafe; border-color: #93c5fd; }
+        .acp-cell.today .acp-day-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+        .acp-day-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
+        .acp-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.07); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .acp-add-hint { font-size: .65rem; color: #93c5fd; margin-top: 2px; }
+
         /* ── Drawer ── */
         .drawer-overlay {
             display: none;
@@ -400,6 +425,7 @@
         <div class="page-title">Admin Panel</div>
         <div class="page-subtitle">Click any month card to edit events, colours and dates.</div>
         <div class="months-grid" id="months-grid"></div>
+        <div class="admin-cal-panel" id="admin-cal-panel"></div>
     </main>
 </div>
 
@@ -493,29 +519,155 @@ function renderGrid() {
     const grid = document.getElementById('months-grid');
     grid.innerHTML = '';
     Object.keys(calendarData).forEach(month => {
-        const data = calendarData[month];
-        const events = (data.events || []).sort((a, b) => a.date.localeCompare(b.date));
-        const card = document.createElement('div');
+        const data   = calendarData[month];
+        const events = (data.events || []).sort((a,b) => a.date.localeCompare(b.date));
+        const card   = document.createElement('div');
         card.className = 'month-card' + (currentMonth === month ? ' active' : '');
         card.id = `card-${month}`;
-
-        const preview = events.slice(0, 4).map(ev =>
-            `<div class="event-preview ${isHoliday(ev) ? 'holiday' : ''}">${formatShort(ev.date)}: ${ev.name}</div>`
+        const preview = events.slice(0,4).map(ev =>
+            `<div class="event-preview ${isHoliday(ev)?'holiday':''}">${formatShort(ev.date)}: ${ev.name}</div>`
         ).join('');
-
         card.innerHTML = `
-            <div class="card-header" style="background:${data.color || '#007bff'}">
-                <span>${month}</span>
-                <span class="edit-badge">Edit</span>
+            <div class="card-header" style="background:${data.color||'#007bff'}">
+                <span>${month}</span><span class="edit-badge">&#9660;</span>
             </div>
             <div class="card-body">
-                <div class="card-event-count">${events.length} event${events.length !== 1 ? 's' : ''}</div>
+                <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
                 ${preview}
-                ${events.length > 4 ? `<div class="event-preview" style="color:#aaa">+${events.length - 4} more…</div>` : ''}
+                ${events.length>4?`<div class="event-preview" style="color:#aaa">+${events.length-4} more…</div>`:''}
             </div>`;
-        card.onclick = () => openDrawer(month);
+        card.onclick = () => toggleCalPanel(month);
         grid.appendChild(card);
     });
+}
+
+// ── Admin calendar panel ──────────────────────────────────────────────────────
+const TODAY = new Date();
+const monthKeysList = () => Object.keys(calendarData);
+
+function toggleCalPanel(month) {
+    if (currentMonth === month) { closeCalPanel(); return; }
+    openCalPanel(month);
+}
+
+function openCalPanel(month) {
+    if (currentMonth) {
+        document.getElementById(`card-${currentMonth}`)?.classList.remove('active');
+    }
+    currentMonth = month;
+    document.getElementById(`card-${month}`)?.classList.add('active');
+    renderCalPanel(month);
+    const panel = document.getElementById('admin-cal-panel');
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeCalPanel() {
+    document.getElementById(`card-${currentMonth}`)?.classList.remove('active');
+    currentMonth = null;
+    const panel = document.getElementById('admin-cal-panel');
+    panel.classList.remove('open');
+    panel.innerHTML = '';
+}
+
+function navigateCalPanel(dir) {
+    const keys = monthKeysList();
+    const idx  = keys.indexOf(currentMonth);
+    const next = keys[idx + dir];
+    if (next) openCalPanel(next);
+}
+
+function renderCalPanel(month) {
+    const panel  = document.getElementById('admin-cal-panel');
+    const data   = calendarData[month];
+    const events = data.events || [];
+    const color  = data.color || '#007bff';
+    const keys   = monthKeysList();
+    const idx    = keys.indexOf(month);
+
+    // Determine year/month from first event or default
+    const ref = events[0] ? new Date(events[0].date+'T00:00:00') : new Date(2026, 0, 1);
+    const year = events[0] ? parseInt(events[0].date.split('-')[0]) : 2026;
+    const mIdx = events[0] ? parseInt(events[0].date.split('-')[1])-1 : ref.getMonth();
+    const daysInMonth = new Date(year, mIdx+1, 0).getDate();
+    const firstDow    = new Date(year, mIdx, 1).getDay();
+
+    // Build event map by day
+    const evMap = {};
+    events.forEach(ev => {
+        const d = parseInt(ev.date.split('-')[2]);
+        if (!evMap[d]) evMap[d] = [];
+        evMap[d].push(ev);
+    });
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let cells = dayNames.map(d => `<div class="acp-day-name">${d}</div>`).join('');
+    for (let i=0; i<firstDow; i++) cells += `<div class="acp-cell empty"></div>`;
+
+    for (let d=1; d<=daysInMonth; d++) {
+        const dow     = (firstDow+d-1)%7;
+        const isWknd  = dow===0||dow===6;
+        const dayEvs  = evMap[d]||[];
+        const dateStr = `${year}-${String(mIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isTdy   = TODAY.getFullYear()===year && TODAY.getMonth()===mIdx && TODAY.getDate()===d;
+
+        let cls = 'acp-cell clickable';
+        if (isWknd)       cls += ' weekend';
+        if (dayEvs.length) cls += ' has-event';
+        if (isTdy)        cls += ' today';
+
+        const evTags = dayEvs.map(ev =>
+            `<span class="acp-ev-tag">${ev.name}</span>`
+        ).join('');
+
+        cells += `<div class="${cls}" onclick="openDrawerForDay('${month}','${dateStr}')">
+            <div class="acp-day-num">${d}</div>
+            ${evTags}
+            <span class="acp-add-hint">+ add</span>
+        </div>`;
+    }
+
+    panel.innerHTML = `
+        <div class="acp-header" style="background:${color}">
+            <div class="acp-nav">
+                <button class="acp-nav-btn" onclick="navigateCalPanel(-1)" ${idx===0?'disabled':''}>&#8592;</button>
+                <span class="acp-title">${month} ${year}</span>
+                <button class="acp-nav-btn" onclick="navigateCalPanel(1)" ${idx===keys.length-1?'disabled':''}>&#8594;</button>
+            </div>
+            <button class="acp-close" onclick="closeCalPanel()">&#x2715;</button>
+        </div>
+        <div class="acp-grid-wrap">
+            <div class="acp-grid">${cells}</div>
+        </div>`;
+}
+
+function openDrawerForDay(month, dateStr) {
+    currentEditMonth = month;
+    const data  = calendarData[month];
+    document.getElementById('modal-title').textContent = `Edit — ${month}`;
+    document.getElementById('drawer-header').style.background = data.color || '#007bff';
+    document.getElementById('drawer-color').value = data.color || '#007bff';
+    document.getElementById('color-preview').style.background = data.color || '#007bff';
+    document.getElementById('save-status').textContent = '';
+
+    const list   = document.getElementById('events-list');
+    list.innerHTML = '';
+
+    // Show existing events for this day
+    const dayEvs = (data.events||[]).filter(e => e.date === dateStr).sort((a,b)=>a.date.localeCompare(b.date));
+    dayEvs.forEach(ev => addEventRow(ev.date, ev.name));
+
+    // Always add a blank row pre-filled with the clicked date
+    addEventRow(dateStr, '');
+
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
+
+    // Focus the new event name field
+    setTimeout(() => {
+        const inputs = list.querySelectorAll('input[type="text"]');
+        if (inputs.length) inputs[inputs.length-1].focus();
+    }, 50);
 }
 
 // ── Drawer ──────────────────────────────────────────────────────────────────
@@ -587,8 +739,9 @@ async function saveMonth() {
     if (result.ok) {
         document.getElementById('save-status').textContent = '✓ Saved successfully';
         renderAll();
-        // Update drawer header color live
         document.getElementById('drawer-header').style.background = color;
+        // Refresh the calendar panel if open for this month
+        if (currentMonth === currentEditMonth) renderCalPanel(currentMonth);
     } else {
         document.getElementById('save-status').style.color = '#c62828';
         document.getElementById('save-status').textContent = 'Save failed — please try again';
