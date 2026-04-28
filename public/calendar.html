@@ -422,7 +422,7 @@ async function logout() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function isHoliday(ev) { return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day'); }
+function isHoliday(ev) { return ev.permanent === true; }
 function formatShort(dateStr) { const d=new Date(dateStr+'T00:00:00'); return d.toLocaleString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}); }
 function ordinal(n) { const s=["th","st","nd","rd"],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
 function getDateRange(events) {
@@ -546,10 +546,14 @@ function buildUpcoming() {
 
     const html = all.map(ev => {
         const isPast = new Date(ev.date + 'T23:59:59') < now;
-        const dotColor = ev.isBirthday ? '#f59e0b' : isHoliday(ev) ? '#7c3aed' : (ev.color || '#90a4ae');
+        const bdSVG_sm = `<svg width="8" height="10" viewBox="0 0 9 11" style="vertical-align:middle;margin-right:4px;flex-shrink:0"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2.5" rx="0.3" fill="#e5e7eb"/><circle cx="4.5" cy="8" r="3.5" fill="#fbbf24"/><circle cx="4.5" cy="8" r="2" fill="#fde68a"/></svg>`;
+        const dotColor = isHoliday(ev) ? '#7c3aed' : ev.emergency ? '#ef4444' : (ev.color || '#3b82f6');
+        const dotEl = ev.isBirthday
+            ? bdSVG_sm
+            : `<span class="ev-dot" style="background:${dotColor}"></span>`;
         return `<div class="upcoming-event${isPast ? ' is-past' : ''}" onclick="openMonth('${ev.month}','${ev.date}')">
             <div class="ev-date">${formatShort(ev.date)}</div>
-            <div class="ev-name"><span class="ev-dot" style="background:${dotColor}"></span>${ev.name}</div>
+            <div class="ev-name">${dotEl}${ev.name}</div>
         </div>`;
     }).join('');
 
@@ -586,7 +590,7 @@ function buildGrid() {
             </div>
             <div class="card-body">
                 <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
-                <div class="card-dots">${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':'#90a4ae')}" title="${ev.name}"></div>`).join('')}</div>
+                <div class="card-dots">${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':ev.emergency?'#ef4444':'#3b82f6')}" title="${ev.name}"></div>`).join('')}</div>
             </div>`;
         card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
@@ -860,18 +864,25 @@ function fpSwatches(selectedColor, onclickFn) {
 
 function renderAdminEdit(dateStr, dayEvs, month) {
     const rows = dayEvs.map((ev, i) => {
-        const dot = ev.color || '#607d8b';
+        const dot = ev.color || (isHoliday(ev) ? '#7c3aed' : ev.emergency ? '#ef4444' : '#607d8b');
+        const isPermanent = ev.permanent === true;
         const swatches = EV_COLORS.map(c =>
             `<div class="fp-color-swatch${c === dot ? ' selected' : ''}" style="background:${c}" onclick="changeEvColor('${month}','${dateStr}',${i},'${c}',this)"></div>`
         ).join('');
         return `<div class="fp-admin-event-row" id="fp-evrow-${dateStr}-${i}">
-            <button class="fp-ev-color-dot" style="background:${dot}" onclick="toggleEvColorPicker('${dateStr}',${i})" title="Change color"></button>
-            <span>${ev.name}</span>
-            <button class="fp-admin-del" onclick="adminDeleteEvent('${month}','${dateStr}',${i})" title="Remove">✕</button>
+            ${isPermanent
+                ? `<span style="width:12px;height:12px;border-radius:50%;background:${dot};display:inline-block;flex-shrink:0"></span>`
+                : `<button class="fp-ev-color-dot" style="background:${dot}" onclick="toggleEvColorPicker('${dateStr}',${i})" title="Change color"></button>`}
+            <span style="${isPermanent?'color:#7c3aed;font-weight:600':''}">
+                ${isPermanent ? '✨ ' : ''}${ev.name}
+            </span>
+            ${isPermanent
+                ? `<span style="font-size:.67rem;color:#9ca3af;padding:1px 5px;background:#f3f4f6;border-radius:8px">Permanent</span>`
+                : `<button class="fp-admin-del" onclick="adminDeleteEvent('${month}','${dateStr}',${i})" title="Remove">✕</button>`}
         </div>
-        <div class="fp-ev-color-row" id="fp-evpicker-${dateStr}-${i}" style="display:none">
+        ${isPermanent ? '' : `<div class="fp-ev-color-row" id="fp-evpicker-${dateStr}-${i}" style="display:none">
             <div class="fp-color-swatches">${swatches}</div>
-        </div>`;
+        </div>`}`;
     }).join('');
 
     const addSwatches = EV_COLORS.map(c =>

@@ -13,6 +13,48 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-prod';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
+// ── Jamaica 2026 public holidays (permanent, cannot be deleted) ───────────────
+const PERMANENT_HOLIDAYS = {
+  'January':  [{ date:'2026-01-01', name:"New Year's Day",        permanent:true }],
+  'February': [{ date:'2026-02-18', name:'Ash Wednesday',         permanent:true }],
+  'April':    [{ date:'2026-04-03', name:'Good Friday',           permanent:true },
+               { date:'2026-04-06', name:'Easter Monday',         permanent:true }],
+  'May':      [{ date:'2026-05-23', name:'Labour Day',            permanent:true },
+               { date:'2026-05-25', name:'Labour Day (Observed)', permanent:true }],
+  'August':   [{ date:'2026-08-01', name:'Emancipation Day',      permanent:true },
+               { date:'2026-08-06', name:'Independence Day',      permanent:true }],
+  'October':  [{ date:'2026-10-19', name:"National Heroes' Day",  permanent:true }],
+  'December': [{ date:'2026-12-25', name:'Christmas Day',         permanent:true },
+               { date:'2026-12-26', name:'Boxing Day',            permanent:true }],
+};
+
+const HOLIDAY_NAMES = new Set(Object.values(PERMANENT_HOLIDAYS).flat().map(h => h.name));
+
+function injectHolidays(raw) {
+  const data = JSON.parse(JSON.stringify(raw));
+  // Strip placeholder events from all months
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('_') || !data[k]?.events) return;
+    data[k].events = data[k].events.filter(e => e.name !== 'Placeholder Event');
+  });
+  // Inject permanent holidays, removing stale duplicates by name first
+  Object.entries(PERMANENT_HOLIDAYS).forEach(([month, holidays]) => {
+    if (!data[month]) data[month] = { color: '#8b5cf6', events: [] };
+    data[month].events = (data[month].events || []).filter(e => !HOLIDAY_NAMES.has(e.name) && !e.permanent);
+    data[month].events = [...holidays, ...data[month].events].sort((a,b) => a.date.localeCompare(b.date));
+  });
+  return data;
+}
+
+function stripHolidays(raw) {
+  const data = JSON.parse(JSON.stringify(raw));
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('_') || !data[k]?.events) return;
+    data[k].events = data[k].events.filter(e => !e.permanent && e.name !== 'Placeholder Event');
+  });
+  return data;
+}
+
 // ── DB init ───────────────────────────────────────────────────────────────────
 async function initDB() {
   await pool.query(`
@@ -575,16 +617,17 @@ app.get('/api/birthdays', async (req, res) => {
 app.get('/api/calendar', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT data FROM calendar WHERE id=1');
-    res.json(rows[0]?.data || {});
+    res.json(injectHolidays(rows[0]?.data || {}));
   } catch {
-    try { res.json(JSON.parse(require('fs').readFileSync(path.join(__dirname,'data.json'),'utf8'))); }
+    try { res.json(injectHolidays(JSON.parse(require('fs').readFileSync(path.join(__dirname,'data.json'),'utf8')))); }
     catch { res.status(500).json({ error: 'Failed to read data' }); }
   }
 });
 
 app.post('/api/calendar', requireAdmin, async (req, res) => {
   try {
-    await pool.query('INSERT INTO calendar (id,data) VALUES (1,$1) ON CONFLICT (id) DO UPDATE SET data=$1', [req.body]);
+    const clean = stripHolidays(req.body);
+    await pool.query('INSERT INTO calendar (id,data) VALUES (1,$1) ON CONFLICT (id) DO UPDATE SET data=$1', [clean]);
     res.json({ ok: true });
   } catch { res.status(500).json({ error: 'Failed to save data' }); }
 });

@@ -105,7 +105,8 @@
         .ws-body { padding: 4px 5px; min-height: 60px; display: flex; flex-direction: column; gap: 2px; }
         .ws-ev { font-size: .65rem; padding: 2px 5px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .ws-ev.public   { background: #dcfce7; color: #166534; }
-        .ws-ev.holiday  { background: #fee2e2; color: #991b1b; }
+        .ws-ev.holiday    { background: #ede9fe; color: #6d28d9; }
+        .ws-ev.emergency  { background: #fee2e2; color: #991b1b; }
         .ws-ev.birthday { background: #fef9c3; color: #92400e; }
         .ws-ev.personal { background: #ede9fe; color: #5b21b6; }
 
@@ -383,7 +384,7 @@ function colorFor(n) { let h=0; for(let c of n||'') h=(h*31+c.charCodeAt(0))%COL
 function pad(n) { return String(n).padStart(2,'0'); }
 function dateStr(y,m,d) { return `${y}-${pad(m+1)}-${pad(d)}`; }
 function formatShort(s) { const d=new Date(s+'T00:00:00'); return d.toLocaleString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}); }
-function isHoliday(ev) { return ev.name !== 'Placeholder Event' && ev.name.toLowerCase().includes('day'); }
+function isHoliday(ev) { return ev.permanent === true; }
 
 fetch('/api/auth-status').then(r=>r.json()).then(d => {
     if (!d.authenticated) { location.href='/login.html'; return; }
@@ -437,7 +438,9 @@ function buildEventMap() {
     const map = {};
     Object.values(calendarData).forEach(m => (m.events||[]).forEach(e => {
         if (!map[e.date]) map[e.date] = [];
-        map[e.date].push({ ...e, type: 'public', color: isHoliday(e) ? '#ef4444' : m.color||'#6b7280' });
+        const type  = e.permanent ? 'holiday' : e.emergency ? 'emergency' : 'public';
+        const color = e.color || (e.permanent ? '#7c3aed' : e.emergency ? '#ef4444' : '#3b82f6');
+        map[e.date].push({ ...e, type, color });
     }));
     birthdayEvents.forEach(b => {
         if (!map[b.date]) map[b.date] = [];
@@ -493,7 +496,12 @@ function renderMonth() {
         const isTd = ds === `${TODAY.getFullYear()}-${pad(TODAY.getMonth()+1)}-${pad(TODAY.getDate())}`;
         const isSel= ds === selectedDate;
         const evs  = evMap[ds]||[];
-        const dots = evs.slice(0,5).map(e => `<div class="cg-dot" style="background:${e.color}" title="${e.name}"></div>`).join('');
+        const bdSVG = (name) => `<svg width="9" height="11" viewBox="0 0 9 11" style="display:block;flex-shrink:0" title="${name}"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2.5" rx="0.3" fill="#e5e7eb"/><circle cx="4.5" cy="8" r="3.5" fill="#fbbf24"/><circle cx="4.5" cy="8" r="2" fill="#fde68a"/></svg>`;
+        const dots = evs.slice(0,5).map(e =>
+            e.type === 'birthday'
+                ? bdSVG(e.name)
+                : `<div class="cg-dot" style="background:${e.color}" title="${e.name}"></div>`
+        ).join('');
         const dc   = dayColors[ds];
         const dcCls   = dc ? ' day-colored' : '';
         const dcStyle = dc ? ` style="--day-color:${dc}"` : '';
@@ -525,7 +533,7 @@ function renderWeek() {
         const isTd= d.toDateString()===TODAY.toDateString();
         const evs = evMap[ds]||[];
         const evHtml = evs.map(e => {
-            const cls = e.type==='birthday'?'birthday':isHoliday(e)?'holiday':'public';
+            const cls = e.type==='birthday' ? 'birthday' : e.type==='holiday' ? 'holiday' : e.type==='emergency' ? 'emergency' : 'public';
             return `<div class="ws-ev ${cls}" title="${e.name}">${e.name}</div>`;
         }).join('');
         const wdc = wkDayColors[ds];
@@ -553,10 +561,10 @@ function showDayDetail(ds) {
     const evs   = evMap[ds]||[];
     const month = Object.keys(calendarData).find(m => (calendarData[m].events||[]).some(e => e.date===ds));
 
-    const rows = evs.filter(e => e.type==='public').map((e,i) =>
+    const rows = evs.filter(e => e.type==='public'||e.type==='holiday'||e.type==='emergency').map((e,i) =>
         `<div class="day-ev-row">
-            <div class="day-ev-name">${e.name}</div>
-            <button class="day-ev-del" onclick="deleteDayEvent('${ds}','${e.name.replace(/'/g,"\\'")}')">✕</button>
+            <div class="day-ev-name" style="${e.permanent?'color:#7c3aed;font-weight:600':e.emergency?'color:#ef4444;font-weight:600':''}">${e.permanent?'✨ ':e.emergency?'⚡ ':''}${e.name}</div>
+            ${e.permanent ? '<span style="font-size:.68rem;color:#9ca3af;padding:2px 6px;background:#f3f4f6;border-radius:8px">Holiday</span>' : `<button class="day-ev-del" onclick="deleteDayEvent('${ds}','${e.name.replace(/'/g,"\\'")}')">✕</button>`}
         </div>`
     ).join('') || '<div style="font-size:.82rem;color:#ccc;margin-bottom:8px">No events</div>';
 
@@ -705,7 +713,7 @@ async function addEmergencyEvent() {
     if (!date||!name) { setStatus('em-status','Date and name required','err'); return; }
     const month = findOrCreateMonth(date);
     calendarData[month].events = calendarData[month].events||[];
-    calendarData[month].events.push({ date, name });
+    calendarData[month].events.push({ date, name, emergency: true });
     calendarData[month].events.sort((a,b)=>a.date.localeCompare(b.date));
     await saveCalendar();
     setStatus('em-status','⚡ Added to calendar','ok');
