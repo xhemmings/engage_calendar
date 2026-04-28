@@ -335,6 +335,28 @@ app.delete('/api/me/bookmarks/:key', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Activity log ─────────────────────────────────────────────────────────────
+app.get('/api/activity', requireAdmin, async (req, res) => {
+  const [comments, reactions] = await Promise.all([
+    pool.query(`SELECT ec.id, ec.event_key, ec.username, ec.body, ec.created_at,
+                       u.first_name, u.last_name
+                FROM event_comments ec
+                LEFT JOIN users u ON ec.username=u.username
+                ORDER BY ec.created_at DESC LIMIT 30`),
+    pool.query(`SELECT er.event_key, er.username, er.reaction, er.created_at,
+                       u.first_name, u.last_name
+                FROM event_reactions er
+                LEFT JOIN users u ON er.username=u.username
+                ORDER BY er.created_at DESC LIMIT 30`),
+  ]);
+  // Merge and sort by date
+  const feed = [
+    ...comments.rows.map(r => ({ ...r, type: 'comment' })),
+    ...reactions.rows.map(r => ({ ...r, type: 'reaction' })),
+  ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 40);
+  res.json(feed);
+});
+
 // ── Birthdays ─────────────────────────────────────────────────────────────────
 app.get('/api/birthdays', async (req, res) => {
   const { rows } = await pool.query(
