@@ -70,7 +70,8 @@ async function initDB() {
       data JSONB NOT NULL
     );
 
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS birthday DATE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS birthday      DATE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
     INSERT INTO users (username, phone, role)
     VALUES ('xavierh', '+18762903666', 'superadmin')
@@ -97,6 +98,23 @@ function requireSuperAdmin(req, res, next) {
   const s = getSession(req);
   if (!s || s.role !== 'superadmin') return res.status(403).json({ error: 'Forbidden' });
   next();
+}
+
+// ── Password helpers ──────────────────────────────────────────────────────────
+function hashPassword(pwd) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(pwd, salt, 10000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+function verifyPassword(pwd, stored) {
+  const [salt, hash] = (stored||'').split(':');
+  if (!salt||!hash) return false;
+  return crypto.pbkdf2Sync(pwd, salt, 10000, 64, 'sha512').toString('hex') === hash;
+}
+function generatePassword() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  const bytes = crypto.randomBytes(12);
+  return Array.from(bytes).map(b => chars[b % chars.length]).join('');
 }
 
 async function sendWhatsAppOTP(phone, otp) {
@@ -164,7 +182,7 @@ app.post('/api/login', async (req, res) => {
   catch (e) { console.error('OTP send error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, role: rows[0].role }, JWT_SECRET, { expiresIn: '5m' });
   res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
-  res.json({ ok: true, channel: rows[0].role === 'superadmin' ? 'whatsapp' : 'email' });
+  res.json({ ok: true, channel: rows[0].role === 'superadmin' ? 'whatsapp' : 'email', hasPassword: !!rows[0].password_hash });
 });
 
 app.post('/api/verify-otp', (req, res) => {
@@ -179,31 +197,100 @@ app.post('/api/verify-otp', (req, res) => {
   } catch { res.status(401).json({ error: 'Code expired or invalid' }); }
 });
 
+// Password-based login (skips OTP)
+app.post('/api/login/password', async (req, res) => {
+  const { username, password } = req.body || {};
+  const { rows } = await pool.query('SELECT * FROM users WHERE username=$1', [username]);
+  const user = rows[0];
+  if (!user || !user.password_hash) return res.status(401).json({ error: 'No password set for this account' });
+  if (!verifyPassword(password, user.password_hash)) return res.status(401).json({ error: 'Incorrect password' });
+  const session = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
+  res.cookie('session', session, { httpOnly: true, maxAge: 28800000, sameSite: 'strict' });
+  res.json({ ok: true, role: user.role });
+});
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('session'); res.clearCookie('otp_pending'); res.json({ ok: true });
 });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
-app.get('/api/users', requireSuperAdmin, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM users ORDER BY created_at');
+app.get('/api/users', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  // Superadmin sees all; regular admin sees only viewers
+  const { rows } = me.role === 'superadmin'
+    ? await pool.query('SELECT * FROM users ORDER BY created_at')
+    : await pool.query("SELECT * FROM users WHERE role='viewer' ORDER BY created_at");
   const users = {};
-  rows.forEach(r => { users[r.username] = { phone: r.phone, role: r.role, firstName: r.first_name, lastName: r.last_name, email: r.email, createdAt: r.created_at, invitedBy: r.invited_by }; });
+  rows.forEach(r => { users[r.username] = { phone: r.phone, role: r.role, firstName: r.first_name, lastName: r.last_name, email: r.email, createdAt: r.created_at, invitedBy: r.invited_by, hasPassword: !!r.password_hash }; });
   res.json(users);
 });
 
-app.delete('/api/users/:username', requireSuperAdmin, async (req, res) => {
+app.put('/api/users/:username', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  const { username } = req.params;
+  const { rows } = await pool.query('SELECT role FROM users WHERE username=$1', [username]);
+  if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+  // Admins can only edit viewers; superadmin can edit admin/viewer
+  if (me.role === 'admin' && rows[0].role !== 'viewer') return res.status(403).json({ error: 'Forbidden' });
+  if (rows[0].role === 'superadmin') return res.status(403).json({ error: 'Cannot edit superadmin' });
+  const { firstName, lastName, email, phone, role } = req.body || {};
+  // Only superadmin can change roles (viewer↔admin only)
+  const newRole = me.role === 'superadmin' && ['viewer','admin'].includes(role) ? role : rows[0].role;
+  await pool.query('UPDATE users SET first_name=$1, last_name=$2, email=$3, phone=$4, role=$5 WHERE username=$6',
+    [firstName||null, lastName||null, email||null, phone||null, newRole, username]);
+  res.json({ ok: true });
+});
+
+app.delete('/api/users/:username', requireAdmin, async (req, res) => {
   const me = getSession(req);
   const { username } = req.params;
   if (username === me.username) return res.status(400).json({ error: 'Cannot delete yourself' });
-  const { rowCount } = await pool.query("DELETE FROM users WHERE username=$1 AND role!='superadmin'", [username]);
-  if (!rowCount) return res.status(404).json({ error: 'User not found or protected' });
+  const { rows } = await pool.query('SELECT role FROM users WHERE username=$1', [username]);
+  if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+  if (rows[0].role === 'superadmin') return res.status(403).json({ error: 'Cannot delete superadmin' });
+  if (me.role === 'admin' && rows[0].role !== 'viewer') return res.status(403).json({ error: 'Forbidden' });
+  await pool.query('DELETE FROM users WHERE username=$1', [username]);
+  res.json({ ok: true });
+});
+
+app.post('/api/users/:username/reset-password', requireAdmin, async (req, res) => {
+  const me = getSession(req);
+  const { username } = req.params;
+  const { rows } = await pool.query('SELECT * FROM users WHERE username=$1', [username]);
+  const user = rows[0];
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.role === 'superadmin') return res.status(403).json({ error: 'Cannot reset superadmin password' });
+  if (me.role === 'admin' && user.role !== 'viewer') return res.status(403).json({ error: 'Forbidden' });
+  if (!user.email) return res.status(400).json({ error: 'User has no email address on file' });
+  const pwd  = generatePassword();
+  const hash = hashPassword(pwd);
+  await pool.query('UPDATE users SET password_hash=$1 WHERE username=$2', [hash, username]);
+  try {
+    await sendEmailOTP(user.email, `New login password`);
+    // Send actual password email
+    const nodemailer  = require('nodemailer');
+    const transporter = nodemailer.createTransport({ service:'gmail', auth:{ user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+    await transporter.sendMail({
+      from: `"Engagement Calendar" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: 'Your Engagement Calendar password',
+      html: `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:420px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px">
+        <div style="font-size:1.1rem;font-weight:700;color:#1a1f36;margin-bottom:8px">Engagement Calendar</div>
+        <p style="color:#555;margin-bottom:20px">Hi ${user.first_name||username}, your password has been set by an administrator.</p>
+        <div style="font-size:1.4rem;font-weight:800;letter-spacing:4px;color:#1a1f36;padding:16px 20px;background:#eef0f3;border-radius:8px;text-align:center">${pwd}</div>
+        <p style="color:#aaa;font-size:13px;margin-top:16px">Use this password to log in at your next session.</p>
+      </div>`,
+    });
+  } catch(e) { console.error('Password email error:', e.message); return res.status(500).json({ error: 'Failed to send password email' }); }
   res.json({ ok: true });
 });
 
 // ── Invites ───────────────────────────────────────────────────────────────────
-app.post('/api/invite/generate', requireSuperAdmin, async (req, res) => {
+app.post('/api/invite/generate', requireAdmin, async (req, res) => {
   const me   = getSession(req);
-  const role = ['admin','viewer'].includes(req.body?.role) ? req.body.role : 'viewer';
+  // Admins can only invite viewers; superadmin can invite admin or viewer
+  const requestedRole = req.body?.role;
+  const role = me.role === 'superadmin' && requestedRole === 'admin' ? 'admin' : 'viewer';
   const token = crypto.randomBytes(24).toString('hex');
   const expires = new Date(Date.now() + 48 * 60 * 60 * 1000);
   await pool.query('INSERT INTO invites (token, created_by, invite_role, expires_at) VALUES ($1,$2,$3,$4)', [token, me.username, role, expires]);

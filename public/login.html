@@ -45,7 +45,17 @@
       <button class="btn" id="login-btn" onclick="submitUsername()">Send Verification Code</button>
     </div>
 
-    <div id="step-otp">
+    <!-- Choose method (shown when password exists) -->
+    <div id="step-method" style="display:none">
+      <h2>How to sign in?</h2>
+      <p style="font-size:.88rem;color:#888;margin-bottom:22px">Choose how you'd like to verify.</p>
+      <button class="btn" onclick="chooseMethod('code')" style="margin-bottom:10px">&#128233; Send verification code</button>
+      <button class="btn" style="background:#4527a0" onclick="chooseMethod('password')">&#128274; Enter my password</button>
+      <button class="btn btn-ghost" style="margin-top:8px" onclick="backToUsername()">&#8592; Back</button>
+    </div>
+
+    <!-- OTP step -->
+    <div id="step-otp" style="display:none">
       <h2>Check your inbox</h2>
       <div class="wa-hint" id="otp-channel-hint" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
@@ -60,6 +70,19 @@
       <button class="btn btn-ghost" onclick="backToUsername()">&#8592; Back</button>
     </div>
 
+    <!-- Password step -->
+    <div id="step-password" style="display:none">
+      <h2>Enter your password</h2>
+      <p style="font-size:.88rem;color:#888;margin-bottom:22px">Use the password that was sent to your email.</p>
+      <div class="error" id="pwd-error"></div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="pwd-input" autocomplete="current-password" />
+      </div>
+      <button class="btn" id="pwd-btn" onclick="submitPassword()">Login</button>
+      <button class="btn btn-ghost" onclick="backToUsername()">&#8592; Back</button>
+    </div>
+
   </div>
 </div>
 <script>
@@ -67,8 +90,14 @@ fetch('/api/auth-status').then(r=>r.json()).then(d => {
     if (d.authenticated) window.location.href = d.role === 'superadmin' ? '/users.html' : '/admin.html';
 });
 
+let pendingUsername = '';
 document.getElementById('username').addEventListener('keydown', e => { if(e.key==='Enter') submitUsername(); });
-document.getElementById('otp-input').addEventListener('keydown', e => { if(e.key==='Enter') submitOtp(); });
+document.addEventListener('keydown', e => {
+    if(e.key==='Enter') {
+        if(document.getElementById('step-otp').style.display!=='none') submitOtp();
+        if(document.getElementById('step-password').style.display!=='none') submitPassword();
+    }
+});
 
 function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
 function hideErr(id) { document.getElementById(id).style.display='none'; }
@@ -83,17 +112,56 @@ async function submitUsername() {
     try {
         const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username }) });
         const d = await r.json();
-        if (!r.ok) { showErr('cred-error', d.error || 'Login failed'); btn.disabled=false; btn.textContent='Send Code'; return; }
-        // Update hint based on channel
-        const hint = document.getElementById('otp-channel-hint');
-        if (d.channel === 'whatsapp') {
-            hint.style.cssText='background:#f0fdf4;border-color:#bbf7d0;color:#166534';
-            hint.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="#22c55e"/></svg> A 6-digit code was sent to your WhatsApp.';
-        }
+        if (!r.ok) { showErr('cred-error', d.error || 'Login failed'); btn.disabled=false; btn.textContent='Send Verification Code'; return; }
+        pendingUsername = username;
+        btn.disabled=false; btn.textContent='Send Verification Code';
         document.getElementById('step-credentials').style.display = 'none';
+
+        if (d.hasPassword) {
+            // Offer choice: code or password (OTP already sent)
+            document.getElementById('step-method').style.display = 'block';
+            // Pre-update the OTP hint for when they choose code
+            const hint = document.getElementById('otp-channel-hint');
+            if (d.channel === 'whatsapp') {
+                hint.style.cssText='background:#f0fdf4;border-color:#bbf7d0;color:#166534';
+                hint.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="#22c55e"/></svg> A 6-digit code was sent to your WhatsApp.';
+            }
+        } else {
+            // No password — go straight to OTP
+            showOtp(d.channel);
+        }
+    } catch { showErr('cred-error', 'Network error.'); btn.disabled=false; btn.textContent='Send Verification Code'; }
+}
+
+function showOtp(channel) {
+    document.getElementById('step-method').style.display   = 'none';
+    document.getElementById('step-otp').style.display      = 'block';
+    document.getElementById('step-password').style.display = 'none';
+    document.getElementById('otp-input').focus();
+}
+
+function chooseMethod(method) {
+    document.getElementById('step-method').style.display = 'none';
+    if (method === 'password') {
+        document.getElementById('step-password').style.display = 'block';
+        document.getElementById('pwd-input').focus();
+    } else {
         document.getElementById('step-otp').style.display = 'block';
         document.getElementById('otp-input').focus();
-    } catch { showErr('cred-error', 'Network error.'); btn.disabled=false; btn.textContent='Send WhatsApp Code'; }
+    }
+}
+
+async function submitPassword() {
+    hideErr('pwd-error');
+    const btn = document.getElementById('pwd-btn');
+    btn.disabled=true; btn.textContent='Signing in…';
+    const pwd = document.getElementById('pwd-input').value;
+    try {
+        const r = await fetch('/api/login/password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username: pendingUsername, password: pwd }) });
+        const d = await r.json();
+        if (!r.ok) { showErr('pwd-error', d.error||'Incorrect password'); btn.disabled=false; btn.textContent='Login'; return; }
+        window.location.href = d.role==='superadmin' ? '/users.html' : d.role==='admin' ? '/admin.html' : '/calendar.html';
+    } catch { showErr('pwd-error','Network error.'); btn.disabled=false; btn.textContent='Login'; }
 }
 
 async function submitOtp() {
@@ -110,11 +178,12 @@ async function submitOtp() {
 }
 
 function backToUsername() {
-    document.getElementById('step-otp').style.display='none';
+    ['step-otp','step-method','step-password'].forEach(id => document.getElementById(id).style.display='none');
     document.getElementById('step-credentials').style.display='block';
     document.getElementById('login-btn').disabled=false;
-    document.getElementById('login-btn').textContent='Send WhatsApp Code';
-    hideErr('otp-error');
+    document.getElementById('login-btn').textContent='Send Verification Code';
+    hideErr('otp-error'); hideErr('pwd-error');
+    if(document.getElementById('pwd-input')) document.getElementById('pwd-input').value='';
 }
 </script>
 </body>
