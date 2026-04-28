@@ -63,18 +63,36 @@
         .month-title { font-size: 1rem; font-weight: 700; color: #1a1f36; flex: 1; text-align: center; }
 
         /* Compact monthly grid */
-        .compact-grid { display: grid; grid-template-columns: repeat(7,1fr); padding: 8px 12px 16px; }
-        .cg-head { text-align: center; font-size: .65rem; font-weight: 700; text-transform: uppercase; color: #bbb; padding: 6px 0; }
-        .cg-cell { min-height: 62px; padding: 5px 4px 3px; border-top: 1px solid #f0f0f0; cursor: pointer; transition: background .1s; position: relative; }
-        .cg-cell:hover { background: #f8faff; }
-        .cg-cell.empty { cursor: default; }
-        .cg-cell.empty:hover { background: transparent; }
-        .cg-cell.selected { background: #eff6ff; }
-        .cg-cell.today .cg-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
-        .cg-cell.weekend { background: #fafafa; }
-        .cg-num { font-size: .82rem; font-weight: 600; color: #374151; margin-bottom: 3px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+        .compact-grid { display: grid; grid-template-columns: repeat(7,1fr); padding: 0 12px 12px; border-top: 1px solid #eee; border-left: 1px solid #eee; margin: 0 0 4px; }
+        .cg-head { text-align: center; font-size: .65rem; font-weight: 700; text-transform: uppercase; color: #bbb; padding: 6px 0; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .cg-cell { min-height: 66px; padding: 4px 4px 3px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; cursor: pointer; transition: filter .1s; position: relative; }
+        .cg-cell:hover { filter: brightness(0.96); }
+        .cg-cell.empty { cursor: default; background: #fafafa; }
+        .cg-cell.empty:hover { filter: none; }
+        .cg-cell.selected { outline: 2px solid #1a1f36; outline-offset: -2px; }
+        .cg-cell.today .cg-num { background: #1a1f36; color: #fff; border-radius: 50%; }
+        .cg-cell.weekend { background: #f9fafb; }
+        .cg-cell.day-colored { background: var(--day-color); }
+        .cg-cell-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+        .cg-num { font-size: .82rem; font-weight: 600; color: #374151; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cg-color-btn { background: none; border: none; cursor: pointer; opacity: 0; padding: 1px 2px; color: #aaa; border-radius: 3px; line-height: 1; transition: opacity .15s, background .1s; }
+        .cg-cell:hover .cg-color-btn { opacity: 1; }
+        .cg-color-btn:hover { background: rgba(0,0,0,.08); color: #555; }
         .cg-dots { display: flex; flex-wrap: wrap; gap: 2px; }
         .cg-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        /* Day color popup */
+        .day-color-popup { display: none; position: fixed; background: #fff; border-radius: 12px; box-shadow: 0 6px 28px rgba(0,0,0,.18); padding: 14px 16px; z-index: 500; width: 216px; }
+        .dcp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .dcp-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #888; }
+        .dcp-close { background: none; border: none; cursor: pointer; color: #bbb; font-size: 1rem; line-height: 1; padding: 0; }
+        .dcp-close:hover { color: #555; }
+        .dcp-swatches { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .dcp-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; transition: transform .1s; border: 1.5px solid rgba(0,0,0,.08); }
+        .dcp-swatch:hover { transform: scale(1.2); }
+        .dcp-swatch.active { outline: 2.5px solid #374151; outline-offset: 2px; transform: scale(1.1); }
+        .dcp-clear { width: 100%; padding: 7px; background: #f5f5f5; border: none; border-radius: 7px; font-size: .78rem; color: #666; cursor: pointer; transition: background .1s; }
+        .dcp-clear:hover { background: #ebebeb; }
 
         /* Weekly strip */
         .week-strip { display: grid; grid-template-columns: repeat(7,1fr); padding: 0 12px 16px; gap: 6px; }
@@ -334,6 +352,16 @@
     </div>
 </div>
 
+<!-- Day color picker popup -->
+<div class="day-color-popup" id="day-color-popup">
+    <div class="dcp-header">
+        <span class="dcp-title">Day Color</span>
+        <button class="dcp-close" onclick="closeDayColorPopup()">&#x2715;</button>
+    </div>
+    <div class="dcp-swatches" id="dcp-swatches"></div>
+    <button class="dcp-clear" onclick="clearDayColor()">&#10005; Clear Color</button>
+</div>
+
 <script>
 const TODAY   = new Date(); TODAY.setHours(0,0,0,0);
 const DAYS    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -457,6 +485,7 @@ function renderMonth() {
     let html = DAYS.map(d => `<div class="cg-head">${d}</div>`).join('');
     for (let i=0; i<firstDow; i++) html += `<div class="cg-cell empty"></div>`;
 
+    const dayColors = calendarData._day_colors || {};
     for (let d=1; d<=daysInMonth; d++) {
         const ds   = dateStr(viewYear, viewMonth, d);
         const dow  = (firstDow+d-1)%7;
@@ -465,8 +494,12 @@ function renderMonth() {
         const isSel= ds === selectedDate;
         const evs  = evMap[ds]||[];
         const dots = evs.slice(0,5).map(e => `<div class="cg-dot" style="background:${e.color}" title="${e.name}"></div>`).join('');
-        html += `<div class="cg-cell${isWk?' weekend':''}${isTd?' today':''}${isSel?' selected':''}" onclick="selectDay('${ds}')">
-            <div class="cg-num">${d}</div>
+        const dc   = dayColors[ds];
+        const dcCls   = dc ? ' day-colored' : '';
+        const dcStyle = dc ? ` style="--day-color:${dc}"` : '';
+        const paintBtn = `<button class="cg-color-btn" onclick="openDayColorPopup('${ds}',event)" title="Set day color"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.477-1.129-.29-.289-.47-.692-.47-1.125A1.64 1.64 0 0 1 14.82 17.5h1.96c3.573 0 6.267-2.866 6.267-6.548C22 6.865 17.5 2 12 2z"/><circle cx="7" cy="12.5" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="12.5" r="1" fill="currentColor" stroke="none"/></svg></button>`;
+        html += `<div class="cg-cell${isWk?' weekend':''}${isTd?' today':''}${isSel?' selected':''}${dcCls}"${dcStyle} onclick="selectDay('${ds}')">
+            <div class="cg-cell-top"><div class="cg-num">${d}</div>${paintBtn}</div>
             <div class="cg-dots">${dots}</div>
         </div>`;
     }
@@ -484,6 +517,7 @@ function renderWeek() {
     const end   = new Date(monday.getTime()+6*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     document.getElementById('cal-title').textContent = `${start} – ${end}`;
 
+    const wkDayColors = calendarData._day_colors || {};
     let html = '';
     for (let i=0; i<7; i++) {
         const d   = new Date(monday); d.setDate(monday.getDate()+i);
@@ -494,12 +528,14 @@ function renderWeek() {
             const cls = e.type==='birthday'?'birthday':isHoliday(e)?'holiday':'public';
             return `<div class="ws-ev ${cls}" title="${e.name}">${e.name}</div>`;
         }).join('');
+        const wdc = wkDayColors[ds];
+        const wdcStyle = wdc ? `background:${wdc};` : '';
         html += `<div class="ws-col">
             <div class="ws-hdr${isTd?' today-col':''}">
                 <div class="wd">${DAYS[d.getDay()]}</div>
                 <div class="wn">${d.getDate()}</div>
             </div>
-            <div class="ws-body" onclick="selectDay('${ds}')" style="cursor:pointer">${evHtml}</div>
+            <div class="ws-body" onclick="selectDay('${ds}')" style="cursor:pointer;${wdcStyle}">${evHtml}</div>
         </div>`;
     }
     document.getElementById('cal-body').innerHTML = `<div class="week-strip">${html}</div>`;
@@ -731,6 +767,53 @@ async function loadActivity() {
 }
 
 function goInvite() { location.href='/users.html'; }
+
+// ── Day color picker ──────────────────────────────────────────────────────────
+const DAY_PALETTE = [
+    '#fef9c3','#dcfce7','#dbeafe','#ede9fe','#fce7f3','#ffedd5',
+    '#fbbf24','#4ade80','#60a5fa','#c084fc','#f472b6','#fb923c'
+];
+let colorPickerDate = null;
+
+function openDayColorPopup(ds, evt) {
+    evt.stopPropagation();
+    colorPickerDate = ds;
+    const current = (calendarData._day_colors || {})[ds];
+    const popup = document.getElementById('day-color-popup');
+    const swatches = document.getElementById('dcp-swatches');
+    swatches.innerHTML = DAY_PALETTE.map(c =>
+        `<div class="dcp-swatch${c === current ? ' active' : ''}" style="background:${c}" onclick="applyDayColor('${c}')"></div>`
+    ).join('');
+    const rect = evt.target.getBoundingClientRect();
+    const x = Math.min(rect.left, window.innerWidth - 230);
+    const y = Math.min(rect.bottom + 4, window.innerHeight - 180);
+    popup.style.left = x + 'px';
+    popup.style.top  = y + 'px';
+    popup.style.display = 'block';
+}
+function closeDayColorPopup() {
+    document.getElementById('day-color-popup').style.display = 'none';
+    colorPickerDate = null;
+}
+async function applyDayColor(color) {
+    if (!colorPickerDate) return;
+    if (!calendarData._day_colors) calendarData._day_colors = {};
+    calendarData._day_colors[colorPickerDate] = color;
+    await saveCalendar();
+    closeDayColorPopup();
+    renderCal();
+}
+async function clearDayColor() {
+    if (!colorPickerDate) return;
+    if (calendarData._day_colors) delete calendarData._day_colors[colorPickerDate];
+    await saveCalendar();
+    closeDayColorPopup();
+    renderCal();
+}
+document.addEventListener('click', e => {
+    const popup = document.getElementById('day-color-popup');
+    if (popup && popup.style.display === 'block' && !popup.contains(e.target)) closeDayColorPopup();
+});
 
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open'); }

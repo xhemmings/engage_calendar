@@ -720,8 +720,10 @@ function renderExpandedPanel(panel, month, highlightDate) {
         }).join('');
 
         const rxnBar = hasEv ? `<div class="cell-reactions" id="rxns-${dateStr}"></div>` : '';
+        const dayCss = (calendarData._day_colors || {})[dateStr];
+        const dayColorStyle = dayCss ? ` style="background:${dayCss}"` : '';
 
-        cells += `<div class="${cls}" id="cell-${dateStr}" ${hasEv?`onclick="openFeedback('${dateStr}',this)"`:''}>
+        cells += `<div class="${cls}" id="cell-${dateStr}"${dayColorStyle} ${hasEv?`onclick="openFeedback('${dateStr}',this)"`:''}>
             <div class="cell-num">${d}</div>
             <div class="cell-events">${evTags}</div>
             ${rxnBar}
