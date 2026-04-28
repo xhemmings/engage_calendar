@@ -77,18 +77,20 @@
         /* ── Calendar grid ── */
         .cal-wrap { display: flex; gap: 0; }
         .cal-grid-section { flex: 1; padding: 20px; min-width: 0; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
-        .cal-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #bbb; text-transform: uppercase; padding-bottom: 5px; }
-        .cal-cell { min-height: 70px; border-radius: 8px; padding: 6px 7px; background: #f8f9fa; font-size: .82rem; position: relative; transition: background .12s; }
-        .cal-cell.empty { background: transparent; box-shadow: none; }
-        .cal-cell.weekend { background: #f0f0f0; }
-        .cal-cell.has-event    { background: #e8f5e9; }
-        .cal-cell.has-birthday { background: #fff8e1; }
-        .cal-cell.has-holiday { background: #fdecea; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 0; border: 1px solid #d0d5dd; }
+        .cal-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #888; text-transform: uppercase; padding: 6px 2px; background: #f8f9fa; border-bottom: 1px solid #d0d5dd; border-right: 1px solid #d0d5dd; }
+        .cal-day-name:last-child { border-right: none; }
+        .cal-cell { min-height: 70px; border-radius: 0; padding: 5px 6px; background: #fff; font-size: .82rem; position: relative; transition: background .1s; border-right: 1px solid #d0d5dd; border-bottom: 1px solid #d0d5dd; }
+        .cal-cell:nth-child(7n) { border-right: none; }
+        .cal-cell.empty { background: #fafafa; }
+        .cal-cell.weekend { background: #f5f5f5; }
+        .cal-cell.has-event    { background: #f0fdf4; }
+        .cal-cell.has-birthday { background: #fffbeb; }
+        .cal-cell.has-holiday  { background: #fff5f5; }
         .cal-cell.today .cell-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
         .cal-cell.clickable { cursor: pointer; }
-        .cal-cell.clickable:hover { filter: brightness(.96); }
-        .cal-cell.selected { outline: 2px solid #1a1f36; }
+        .cal-cell.clickable:hover { background: #eff6ff; }
+        .cal-cell.selected { outline: 2px solid #1a1f36; outline-offset: -2px; }
         .cell-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
         .cell-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.06); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cell-ev-tag.holiday  { background: #ffcdd2; color: #b71c1c; font-weight: 600; }
@@ -131,6 +133,31 @@
         .bookmark-item:last-child { border-bottom: none; }
         .bookmark-item:hover { color: #1a1f36; }
 
+        /* Filter bar */
+        .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: #fff; font-size: .82rem; cursor: pointer; color: #555; transition: all .15s; }
+        .filter-btn:hover { border-color: #1a1f36; color: #1a1f36; }
+        .filter-btn.active { background: #1a1f36; color: #fff; border-color: #1a1f36; }
+        .filter-btn.birthday-btn.active { background: #f59e0b; border-color: #f59e0b; }
+
+        /* Right well event list */
+        .upcoming-event.is-past .ev-name { color: #bbb; }
+        .upcoming-event.is-past .ev-date { color: #ccc; }
+        .upcoming-event.is-past:hover .ev-name { color: #999; }
+
+        /* Admin inline edit in feedback panel */
+        .fp-admin-edit { border-top: 1px solid #eee; padding: 12px 16px; }
+        .fp-admin-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .fp-admin-event-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .fp-admin-event-row span { flex: 1; font-size: .83rem; color: #333; background: #f5f5f5; padding: 5px 8px; border-radius: 4px; }
+        .fp-admin-del { background: none; border: none; color: #ddd; cursor: pointer; font-size: .85rem; padding: 3px 5px; }
+        .fp-admin-del:hover { color: #e53935; }
+        .fp-admin-add { display: flex; gap: 6px; margin-top: 8px; }
+        .fp-admin-add input { flex: 1; border: 1.5px solid #ddd; border-radius: 6px; padding: 6px 9px; font-size: .83rem; outline: none; }
+        .fp-admin-add input:focus { border-color: #1a1f36; }
+        .fp-admin-save { padding: 6px 14px; background: #1a1f36; color: #fff; border: none; border-radius: 6px; font-size: .82rem; cursor: pointer; white-space: nowrap; }
+        .fp-admin-save:hover { background: #2d3561; }
+
         /* ── Mobile ── */
         @media (max-width: 900px) {
             .layout { grid-template-columns: 1fr; padding: 12px; }
@@ -155,9 +182,9 @@
 
             /* Calendar grid — keep 7 cols, reduce size */
             .cal-grid-section { padding: 10px 6px 12px; }
-            .cal-grid { gap: 2px; }
-            .cal-day-name { font-size: .6rem; padding-bottom: 4px; }
-            .cal-cell { min-height: 56px; padding: 4px 3px; }
+            .cal-grid { gap: 0; }
+            .cal-day-name { font-size: .6rem; padding: 4px 1px; }
+            .cal-cell { min-height: 52px; padding: 3px 2px; }
             .cell-num { font-size: .75rem; margin-bottom: 1px; }
             .cell-num.today-num { width: 20px; height: 20px; font-size: .72rem; }
             .cell-ev-tag { font-size: .58rem; padding: 1px 3px; margin-bottom: 1px; }
@@ -207,12 +234,18 @@
     </aside>
 
     <main class="main">
+        <div class="filter-bar">
+            <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All Events</button>
+            <button class="filter-btn birthday-btn" id="filter-birthdays" onclick="setFilter('birthdays')">🎂 Birthdays</button>
+        </div>
         <div class="months-grid" id="months-grid"></div>
         <div class="expanded-panel" id="month-detail"></div>
     </main>
 
     <aside class="well" id="right-well">
-        <h3>All Events</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h3 style="margin:0" id="right-well-title">All Events</h3>
+        </div>
         <div id="upcoming-list"></div>
         <div id="bookmarks-section" style="display:none">
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
@@ -223,13 +256,14 @@
 </div>
 
 <script>
-let calendarData  = {};
-let birthdayEvents = []; // overlaid on all months
-let monthKeys     = [];
-let activeMonth   = null;
-let expandedEl    = null;
-let me            = null;
+let calendarData      = {};
+let birthdayEvents    = [];
+let monthKeys         = [];
+let activeMonth       = null;
+let expandedEl        = null;
+let me                = null;
 let activeFeedbackKey = null;
+let activeFilter      = 'all'; // 'all' | 'birthdays'
 
 const TODAY = new Date();
 
@@ -308,23 +342,48 @@ function buildMonthNav() {
 }
 
 // ── Right well all events ─────────────────────────────────────────────────────
+function setFilter(filter) {
+    activeFilter = filter;
+    document.getElementById('filter-all').classList.toggle('active', filter === 'all');
+    document.getElementById('filter-birthdays').classList.toggle('active', filter === 'birthdays');
+    document.getElementById('right-well-title').textContent = filter === 'birthdays' ? '🎂 Birthdays' : 'All Events';
+    buildUpcoming();
+    // Re-render open month if any
+    if (activeMonth) {
+        const panel = document.getElementById('month-detail');
+        renderExpandedPanel(panel, activeMonth, null);
+    }
+}
+
 function buildUpcoming() {
     const list = document.getElementById('upcoming-list');
-    const all = [];
-    monthKeys.forEach(m => {
-        const color = calendarData[m].color||'#007bff';
-        (calendarData[m].events||[]).forEach(ev => all.push({...ev, color, month: m}));
-    });
+    const now  = new Date();
+    const all  = [];
+
+    if (activeFilter !== 'birthdays') {
+        monthKeys.forEach(m => {
+            const color = calendarData[m].color || '#007bff';
+            (calendarData[m].events || []).forEach(ev => all.push({ ...ev, color, month: m }));
+        });
+    }
+
     birthdayEvents.forEach(bd => {
-        const month = monthKeys.find(m => (calendarData[m].events||[]).some(e => e.date.slice(5,7) === bd.date.slice(5,7))) || monthKeys[0];
-        all.push({...bd, color:'#f59e0b', month, isBirthday: true});
+        const month = monthKeys.find(m =>
+            (calendarData[m].events||[]).some(e => e.date.slice(5,7) === bd.date.slice(5,7))
+        ) || monthKeys[0];
+        all.push({ ...bd, color: '#f59e0b', month, isBirthday: true });
     });
-    all.sort((a,b) => a.date.localeCompare(b.date));
-    list.innerHTML = all.map(ev => `
-        <div class="upcoming-event" onclick="openMonth('${ev.month}','${ev.date}')">
+
+    all.sort((a, b) => a.date.localeCompare(b.date));
+
+    list.innerHTML = all.map(ev => {
+        const isPast = new Date(ev.date + 'T23:59:59') < now;
+        const dotColor = ev.isBirthday ? '#f59e0b' : isHoliday(ev) ? '#d32f2f' : ev.color;
+        return `<div class="upcoming-event${isPast ? ' is-past' : ''}" onclick="openMonth('${ev.month}','${ev.date}')">
             <div class="ev-date">${formatShort(ev.date)}</div>
-            <div class="ev-name"><span class="ev-dot" style="background:${ev.isBirthday?'#f59e0b':isHoliday(ev)?'#d32f2f':ev.color}"></span>${ev.name}</div>
-        </div>`).join('');
+            <div class="ev-name"><span class="ev-dot" style="background:${dotColor}"></span>${ev.name}</div>
+        </div>`;
+    }).join('');
 }
 
 // ── Month cards grid ──────────────────────────────────────────────────────────
@@ -538,9 +597,14 @@ async function openFeedback(dateStr, cellEl) {
 
 function renderFeedbackPanel(fp, dateStr, evNames, data) {
     const canInteract = !!me;
+    const isAdmin     = me && ['admin','superadmin'].includes(me.role);
     const likedClass    = data.userReaction==='like'    ? 'liked'    : '';
     const dislikedClass = data.userReaction==='dislike' ? 'disliked' : '';
     const bmClass = data.bookmarked ? 'bookmarked' : '';
+
+    // Get current events for this day from calendarData
+    const month   = activeMonth;
+    const dayEvs  = (calendarData[month]?.events || []).filter(e => e.date === dateStr);
 
     fp.innerHTML = `
         <div class="fp-header">
@@ -556,8 +620,7 @@ function renderFeedbackPanel(fp, dateStr, evNames, data) {
             ${canInteract
                 ? `<button class="rxn-btn ${likedClass}" id="like-btn" onclick="react('${dateStr}','like')">👍 <span class="count" id="like-count">${data.reactions.like}</span></button>
                    <button class="rxn-btn ${dislikedClass}" id="dislike-btn" onclick="react('${dateStr}','dislike')">👎 <span class="count" id="dislike-count">${data.reactions.dislike}</span></button>`
-                : `<span style="font-size:.82rem;color:#aaa">👍 ${data.reactions.like}</span>
-                   <span style="font-size:.82rem;color:#aaa">👎 ${data.reactions.dislike}</span>`}
+                : `<span style="font-size:.82rem;color:#aaa;padding:8px 0">👍 ${data.reactions.like} &nbsp; 👎 ${data.reactions.dislike}</span>`}
         </div>
         <div class="fp-comments" id="fp-comments-${dateStr}">
             ${renderComments(data.comments, dateStr)}
@@ -567,7 +630,59 @@ function renderFeedbackPanel(fp, dateStr, evNames, data) {
                    <textarea id="comment-input" placeholder="Leave a comment…"></textarea>
                    <button class="fp-send" onclick="postComment('${dateStr}')">Send</button>
                </div>`
-            : `<div class="fp-login-prompt"><a href="/login.html">Login</a> to react and leave comments</div>`}`;
+            : `<div class="fp-login-prompt"><a href="/login.html">Login</a> to react and leave comments</div>`}
+        ${isAdmin ? renderAdminEdit(dateStr, dayEvs, month) : ''}`;
+}
+
+function renderAdminEdit(dateStr, dayEvs, month) {
+    const rows = dayEvs.map((ev, i) =>
+        `<div class="fp-admin-event-row">
+            <span>${ev.name}</span>
+            <button class="fp-admin-del" onclick="adminDeleteEvent('${month}','${dateStr}',${i})" title="Remove">✕</button>
+        </div>`
+    ).join('');
+    return `<div class="fp-admin-edit">
+        <div class="fp-admin-title">
+            <span>✏️ Edit Events</span>
+        </div>
+        <div id="admin-ev-list-${dateStr}">${rows || '<div style="font-size:.8rem;color:#ccc;margin-bottom:6px">No events — add one below</div>'}</div>
+        <div class="fp-admin-add">
+            <input type="text" id="admin-ev-input-${dateStr}" placeholder="Event name…" />
+            <button class="fp-admin-save" onclick="adminAddEvent('${month}','${dateStr}')">Add</button>
+        </div>
+    </div>`;
+}
+
+async function adminAddEvent(month, dateStr) {
+    const input = document.getElementById(`admin-ev-input-${dateStr}`);
+    const name  = input.value.trim();
+    if (!name) return;
+    calendarData[month].events = calendarData[month].events || [];
+    calendarData[month].events.push({ date: dateStr, name });
+    calendarData[month].events.sort((a,b) => a.date.localeCompare(b.date));
+    await saveCalendar();
+    input.value = '';
+    // Refresh the panel
+    openFeedback(dateStr, document.getElementById(`cell-${dateStr}`));
+    buildGrid(); markPastMonths();
+}
+
+async function adminDeleteEvent(month, dateStr, idx) {
+    const dayEvs = calendarData[month].events.filter(e => e.date === dateStr);
+    const toRemove = dayEvs[idx];
+    if (!toRemove) return;
+    calendarData[month].events = calendarData[month].events.filter(e => !(e.date === toRemove.date && e.name === toRemove.name));
+    await saveCalendar();
+    openFeedback(dateStr, document.getElementById(`cell-${dateStr}`));
+    buildGrid(); markPastMonths();
+}
+
+async function saveCalendar() {
+    await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(calendarData)
+    });
 }
 
 function renderComments(comments, dateStr) {

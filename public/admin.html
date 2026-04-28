@@ -204,14 +204,16 @@
         .acp-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .acp-close:hover { background: rgba(255,255,255,.4); }
         .acp-grid-wrap { padding: 16px 20px 20px; }
-        .acp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
-        .acp-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #bbb; text-transform: uppercase; padding-bottom: 5px; }
-        .acp-cell { min-height: 72px; border-radius: 8px; padding: 6px 8px; background: #f8f9fa; position: relative; transition: background .12s; border: 2px solid transparent; }
-        .acp-cell.empty { background: transparent; border-color: transparent; }
-        .acp-cell.weekend { background: #f0f0f0; }
-        .acp-cell.has-event { background: #e8f5e9; }
+        .acp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 0; border: 1px solid #d0d5dd; }
+        .acp-day-name { text-align: center; font-size: .7rem; font-weight: 700; color: #888; text-transform: uppercase; padding: 6px 2px; background: #f8f9fa; border-bottom: 1px solid #d0d5dd; border-right: 1px solid #d0d5dd; }
+        .acp-day-name:last-child { border-right: none; }
+        .acp-cell { min-height: 72px; border-radius: 0; padding: 5px 6px; background: #fff; position: relative; transition: background .1s; border-right: 1px solid #d0d5dd; border-bottom: 1px solid #d0d5dd; }
+        .acp-cell:nth-child(7n) { border-right: none; }
+        .acp-cell.empty { background: #fafafa; }
+        .acp-cell.weekend { background: #f5f5f5; }
+        .acp-cell.has-event { background: #f0fdf4; }
         .acp-cell.clickable { cursor: pointer; }
-        .acp-cell.clickable:hover { background: #dbeafe; border-color: #93c5fd; }
+        .acp-cell.clickable:hover { background: #eff6ff; }
         .acp-cell.today .acp-day-num { background: #1a1f36; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
         .acp-day-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
         .acp-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.07); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -419,9 +421,9 @@
             .acp-title { font-size: .95rem; }
             .acp-nav-btn { width: 28px; height: 28px; font-size: .85rem; }
             .acp-grid-wrap { padding: 10px 6px 12px; }
-            .acp-grid { gap: 2px; }
-            .acp-day-name { font-size: .6rem; padding-bottom: 4px; }
-            .acp-cell { min-height: 56px; padding: 4px 3px; }
+            .acp-grid { gap: 0; }
+            .acp-day-name { font-size: .6rem; padding: 4px 1px; }
+            .acp-cell { min-height: 52px; padding: 3px 2px; }
             .acp-day-num { font-size: .75rem; margin-bottom: 1px; }
             .acp-ev-tag { font-size: .58rem; padding: 1px 3px; }
             .acp-add-hint { display: none; }
