@@ -213,6 +213,13 @@ async function sendOTP(user, otp) {
   }
 }
 
+// ── Cookie helper ────────────────────────────────────────────────────────────
+function cookieOpts(maxAge) {
+  const opts = { httpOnly: true, sameSite: 'lax', maxAge };
+  if (process.env.NODE_ENV === 'production') opts.secure = true;
+  return opts;
+}
+
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(cookieParser());
@@ -234,7 +241,7 @@ app.post('/api/login', async (req, res) => {
   try { await sendOTP(rows[0], otp); }
   catch (e) { console.error('OTP send error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, role: rows[0].role }, JWT_SECRET, { expiresIn: '5m' });
-  res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
+  res.cookie('otp_pending', pending, cookieOpts(300000));
   res.json({ ok: true, channel: rows[0].role === 'superadmin' ? 'whatsapp' : 'email', hasPassword: !!rows[0].password_hash });
 });
 
@@ -245,7 +252,7 @@ app.post('/api/verify-otp', (req, res) => {
     if (p.otp !== String(otp)) return res.status(401).json({ error: 'Incorrect code' });
     res.clearCookie('otp_pending');
     const session = jwt.sign({ username: p.username, role: p.role }, JWT_SECRET, { expiresIn: '8h' });
-    res.cookie('session', session, { httpOnly: true, maxAge: 28800000, sameSite: 'strict' });
+    res.cookie('session', session, cookieOpts(28800000));
     res.json({ ok: true, role: p.role });
   } catch { res.status(401).json({ error: 'Code expired or invalid' }); }
 });
@@ -258,12 +265,13 @@ app.post('/api/login/password', async (req, res) => {
   if (!user || !user.password_hash) return res.status(401).json({ error: 'No password set for this account' });
   if (!verifyPassword(password, user.password_hash)) return res.status(401).json({ error: 'Incorrect password' });
   const session = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
-  res.cookie('session', session, { httpOnly: true, maxAge: 28800000, sameSite: 'strict' });
+  res.cookie('session', session, cookieOpts(28800000));
   res.json({ ok: true, role: user.role });
 });
 
 app.post('/api/logout', (req, res) => {
-  res.clearCookie('session'); res.clearCookie('otp_pending'); res.json({ ok: true });
+  const c = { sameSite: 'lax', ...(process.env.NODE_ENV === 'production' ? { secure: true } : {}) };
+  res.clearCookie('session', c); res.clearCookie('otp_pending', c); res.json({ ok: true });
 });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
@@ -380,7 +388,7 @@ app.post('/api/invite/:token/claim', async (req, res) => {
   try { await sendEmailOTP(email, otp); }
   catch (e) { console.error('Invite OTP error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, phone, firstName, lastName, email, birthday: birthday||null, inviteToken: req.params.token, role: inv.invite_role }, JWT_SECRET, { expiresIn: '5m' });
-  res.cookie('otp_pending', pending, { httpOnly: true, maxAge: 300000, sameSite: 'strict' });
+  res.cookie('otp_pending', pending, cookieOpts(300000));
   res.json({ ok: true });
 });
 
@@ -404,7 +412,7 @@ app.post('/api/invite/:token/verify', async (req, res) => {
       [p.username, p.phone, p.role, p.firstName, p.lastName, p.email, p.birthday||null, rows[0].created_by]);
     res.clearCookie('otp_pending');
     const session = jwt.sign({ username: p.username, role: p.role }, JWT_SECRET, { expiresIn: '8h' });
-    res.cookie('session', session, { httpOnly: true, maxAge: 28800000, sameSite: 'strict' });
+    res.cookie('session', session, cookieOpts(28800000));
     res.json({ ok: true, role: p.role });
   } catch { res.status(401).json({ error: 'Code expired or invalid' }); }
 });
