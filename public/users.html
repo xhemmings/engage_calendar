@@ -236,6 +236,27 @@
 
 </div>
 
+<!-- Invite confirmation modal -->
+<div class="modal-overlay" id="invite-confirm-modal">
+    <div class="modal confirm-modal" style="max-width:420px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:12px">
+                <div id="iconf-icon" style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+                <div>
+                    <h3 style="margin-bottom:3px;font-size:1.05rem" id="iconf-title">Create invite?</h3>
+                    <div style="font-size:.78rem;color:#aaa" id="iconf-expiry"></div>
+                </div>
+            </div>
+            <button onclick="closeModal('invite-confirm-modal')" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:1.2rem;padding:0 2px;line-height:1;transition:color .1s" onmouseover="this.style.color='#666'" onmouseout="this.style.color='#bbb'">&#x2715;</button>
+        </div>
+        <p style="font-size:.88rem;color:#555;line-height:1.6;margin-bottom:0" id="iconf-desc"></p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal('invite-confirm-modal')">Cancel</button>
+            <button class="btn-save" id="iconf-confirm-btn" onclick="confirmGenerateInvite()">Create Link</button>
+        </div>
+    </div>
+</div>
+
 <!-- Invite link modal -->
 <div class="modal-overlay" id="invite-modal">
     <div class="modal">
@@ -349,14 +370,14 @@ async function logout() { await fetch('/api/logout',{method:'POST'}); location.h
 function buildInviteButtons() {
     const el = document.getElementById('invite-buttons');
     el.innerHTML = `<div class="invite-picker">
-        <button class="invite-card" onclick="generateInvite('viewer', false)">
+        <button class="invite-card" onclick="previewInvite('viewer', false)">
             <div class="invite-card-icon" style="background:#e8f5e9;color:#2e7d32">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             </div>
             <div class="invite-card-title">Single Invite</div>
             <div class="invite-card-meta">1 person · 48 hours</div>
         </button>
-        <button class="invite-card multi" onclick="generateInvite('viewer', true)">
+        <button class="invite-card multi" onclick="previewInvite('viewer', true)">
             <div class="invite-card-icon" style="background:#e0e7ff;color:#4338ca">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
@@ -364,7 +385,7 @@ function buildInviteButtons() {
             <div class="invite-card-meta">Multiple viewers · 1 hour</div>
         </button>
         ${myRole === 'superadmin' ? `
-        <button class="invite-card admin-card" onclick="generateInvite('admin', false)">
+        <button class="invite-card admin-card" onclick="previewInvite('admin', false)">
             <div class="invite-card-icon" style="background:#d1fae5;color:#065f46">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
@@ -485,6 +506,50 @@ function renderInvites() {
 }
 
 // ── Invite ────────────────────────────────────────────────────────────────────
+let pendingInviteRole  = null;
+let pendingInviteMulti = false;
+
+function previewInvite(role, multiUse) {
+    pendingInviteRole  = role;
+    pendingInviteMulti = multiUse;
+
+    const iconEl   = document.getElementById('iconf-icon');
+    const titleEl  = document.getElementById('iconf-title');
+    const expiryEl = document.getElementById('iconf-expiry');
+    const descEl   = document.getElementById('iconf-desc');
+    const btnEl    = document.getElementById('iconf-confirm-btn');
+
+    if (role === 'admin') {
+        iconEl.style.cssText   = 'width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#d1fae5;color:#065f46';
+        iconEl.innerHTML       = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+        titleEl.textContent    = 'Create admin invite?';
+        expiryEl.textContent   = 'Single use · expires in 48 hours';
+        descEl.textContent     = 'This link can only be used once. The recipient will sign up as an Admin and will be able to edit the calendar.';
+        btnEl.style.background = '#065f46';
+    } else if (multiUse) {
+        iconEl.style.cssText   = 'width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#e0e7ff;color:#4338ca';
+        iconEl.innerHTML       = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+        titleEl.textContent    = 'Create group link?';
+        expiryEl.textContent   = 'Multiple uses · expires in 1 hour';
+        descEl.textContent     = 'Anyone with this link can sign up as a Viewer within the next hour. The link stops working once it expires — cancel it early from the Invitations table if needed.';
+        btnEl.style.background = '#4338ca';
+    } else {
+        iconEl.style.cssText   = 'width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#e8f5e9;color:#2e7d32';
+        iconEl.innerHTML       = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`;
+        titleEl.textContent    = 'Create single invite?';
+        expiryEl.textContent   = 'Single use · expires in 48 hours';
+        descEl.textContent     = 'This link is for one person only. Once used it becomes invalid. Share it directly with the person you want to invite as a Viewer.';
+        btnEl.style.background = '#1a1f36';
+    }
+
+    openModal('invite-confirm-modal');
+}
+
+async function confirmGenerateInvite() {
+    closeModal('invite-confirm-modal');
+    await generateInvite(pendingInviteRole, pendingInviteMulti);
+}
+
 async function generateInvite(role, multiUse = false) {
     const r = await fetch('/api/invite/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ role, multiUse }) });
     const d = await r.json();
