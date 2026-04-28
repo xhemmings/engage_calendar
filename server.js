@@ -225,9 +225,9 @@ app.post('/api/logout', (req, res) => {
 // ── Users ─────────────────────────────────────────────────────────────────────
 app.get('/api/users', requireAdmin, async (req, res) => {
   const me = getSession(req);
-  // Superadmin sees all; regular admin sees only viewers
+  // Superadmin sees all (except other superadmins); regular admin sees only viewers
   const { rows } = me.role === 'superadmin'
-    ? await pool.query('SELECT * FROM users ORDER BY created_at')
+    ? await pool.query("SELECT * FROM users WHERE role != 'superadmin' ORDER BY created_at")
     : await pool.query("SELECT * FROM users WHERE role='viewer' ORDER BY created_at");
   const users = {};
   rows.forEach(r => { users[r.username] = { phone: r.phone, role: r.role, firstName: r.first_name, lastName: r.last_name, email: r.email, createdAt: r.created_at, invitedBy: r.invited_by, hasPassword: !!r.password_hash }; });
@@ -359,7 +359,9 @@ app.get('/api/events/:key/feedback', async (req, res) => {
   const key = decodeURIComponent(req.params.key);
   const [reactionRows, commentRows, userReactionRow, bookmarkRow] = await Promise.all([
     pool.query("SELECT reaction, COUNT(*) FROM event_reactions WHERE event_key=$1 GROUP BY reaction", [key]),
-    pool.query(`SELECT ec.id, ec.username, ec.body, ec.created_at, u.first_name, u.last_name
+    pool.query(`SELECT ec.id, ec.username, ec.body, ec.created_at,
+                       CASE WHEN u.role='superadmin' THEN 'Admin' ELSE COALESCE(u.first_name, ec.username) END AS first_name,
+                       CASE WHEN u.role='superadmin' THEN NULL  ELSE u.last_name END AS last_name
                 FROM event_comments ec LEFT JOIN users u ON ec.username=u.username
                 WHERE ec.event_key=$1 ORDER BY ec.created_at ASC`, [key]),
     s ? pool.query('SELECT reaction FROM event_reactions WHERE event_key=$1 AND username=$2', [key, s.username]) : Promise.resolve({ rows: [] }),
@@ -453,9 +455,17 @@ app.delete('/api/personal-events/:id', requireAuth, async (req, res) => {
 // ── Invite stats ──────────────────────────────────────────────────────────────
 app.get('/api/invites/stats', requireAdmin, async (req, res) => {
   const me = getSession(req);
+  const q = `SELECT i.*,
+    CASE WHEN u.role='superadmin' THEN 'Admin' ELSE i.created_by END AS created_by
+    FROM invites i LEFT JOIN users u ON i.created_by=u.username
+    ORDER BY i.created_at DESC LIMIT 30`;
+  const qOwn = `SELECT i.*,
+    CASE WHEN u.role='superadmin' THEN 'Admin' ELSE i.created_by END AS created_by
+    FROM invites i LEFT JOIN users u ON i.created_by=u.username
+    WHERE i.created_by=$1 ORDER BY i.created_at DESC LIMIT 30`;
   const { rows } = me.role === 'superadmin'
-    ? await pool.query('SELECT * FROM invites ORDER BY created_at DESC LIMIT 30')
-    : await pool.query('SELECT * FROM invites WHERE created_by=$1 ORDER BY created_at DESC LIMIT 30', [me.username]);
+    ? await pool.query(q)
+    : await pool.query(qOwn, [me.username]);
   res.json(rows);
 });
 
@@ -494,12 +504,14 @@ app.post('/api/reminders', requireAdmin, async (req, res) => {
 app.get('/api/activity', requireAdmin, async (req, res) => {
   const [comments, reactions] = await Promise.all([
     pool.query(`SELECT ec.id, ec.event_key, ec.username, ec.body, ec.created_at,
-                       u.first_name, u.last_name
+                       CASE WHEN u.role='superadmin' THEN 'Admin' ELSE COALESCE(u.first_name, ec.username) END AS first_name,
+                       CASE WHEN u.role='superadmin' THEN NULL  ELSE u.last_name END AS last_name
                 FROM event_comments ec
                 LEFT JOIN users u ON ec.username=u.username
                 ORDER BY ec.created_at DESC LIMIT 30`),
     pool.query(`SELECT er.event_key, er.username, er.reaction, er.created_at,
-                       u.first_name, u.last_name
+                       CASE WHEN u.role='superadmin' THEN 'Admin' ELSE COALESCE(u.first_name, er.username) END AS first_name,
+                       CASE WHEN u.role='superadmin' THEN NULL  ELSE u.last_name END AS last_name
                 FROM event_reactions er
                 LEFT JOIN users u ON er.username=u.username
                 ORDER BY er.created_at DESC LIMIT 30`),
