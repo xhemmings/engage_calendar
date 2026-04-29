@@ -40,8 +40,8 @@
         .upcoming-event { padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: .82rem; cursor: pointer; }
         .upcoming-event:last-child { border-bottom: none; }
         .upcoming-event:hover .ev-name { color: #1a1f36; }
-        .ev-date { color: #aaa; font-size: .74rem; margin-bottom: 1px; }
-        .ev-name  { color: #333; font-weight: 500; }
+        .ev-date { color: #888; font-size: .78rem; font-weight: 600; margin-bottom: 2px; }
+        .ev-name  { color: #1a1f36; font-weight: 600; font-size: .88rem; }
         .ev-dot   { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
 
         /* Mobile events accordion */
@@ -56,20 +56,18 @@
         .months-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
 
         /* ── Month card ── */
-        .month-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.08); overflow: hidden; cursor: pointer; transition: transform .15s, box-shadow .15s; }
-        .month-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+        .month-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.09); overflow: hidden; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+        .month-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,.13); }
         .month-card.active { box-shadow: 0 6px 22px rgba(26,31,54,.18); transform: translateY(-2px); }
         .month-card.past { opacity: 0.45; filter: grayscale(0.6); }
         .month-card.past:hover { transform: none; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
-        .card-header { padding: 12px 14px; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .card-header { padding: 14px 16px; color: #fff; font-size: 1.05rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center; letter-spacing: .2px; }
         .chevron { font-size: .7rem; opacity: .8; transition: transform .2s; }
         .month-card.active .chevron { transform: rotate(180deg); }
-        .card-body { padding: 10px 14px 12px; }
-        .card-event-count { font-size: .76rem; color: #aaa; margin-bottom: 6px; }
+        .card-body { padding: 10px 14px 13px; }
+        .card-event-count { font-size: .82rem; font-weight: 600; color: #666; margin-bottom: 8px; }
         .card-dots { display: flex; flex-wrap: wrap; gap: 4px; }
-        .card-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .card-dot.holiday { background: #d32f2f; }
-        .card-dot.normal  { background: #90a4ae; }
+        .card-dot { width: 9px; height: 9px; border-radius: 2px; }
 
         /* ── Expanded panel ── */
         .expanded-panel { display: none; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); overflow: hidden; margin-top: 16px; }
@@ -101,8 +99,8 @@
         .cal-cell.clickable { cursor: pointer; }
         .cal-cell.clickable:hover { background: #eff6ff; }
         .cal-cell.selected { outline: 2px solid #1a1f36; outline-offset: -2px; }
-        .cell-num { font-weight: 600; color: #333; font-size: .88rem; margin-bottom: 3px; }
-        .cell-ev-tag { display: block; font-size: .68rem; color: #444; background: rgba(0,0,0,.06); border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cell-num { font-weight: 700; color: #1a1f36; font-size: .95rem; margin-bottom: 3px; }
+        .cell-ev-tag { display: block; font-size: .72rem; font-weight: 600; color: #444; background: rgba(0,0,0,.07); border-radius: 3px; padding: 2px 5px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cell-ev-tag.holiday  { background: #ede9fe; color: #6d28d9; font-weight: 600; }
         .cell-ev-tag.birthday { background: #fff3cd; color: #856404; font-weight: 600; }
         .cell-reactions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
@@ -145,11 +143,14 @@
         .bookmark-item:hover { color: #1a1f36; }
 
         /* Filter bar */
-        .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .filter-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: #fff; font-size: .82rem; cursor: pointer; color: #555; transition: all .15s; }
+        .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { display: flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 22px; border: 1.5px solid #ddd; background: #fff; font-size: .86rem; font-weight: 600; cursor: pointer; color: #555; transition: all .15s; white-space: nowrap; }
         .filter-btn:hover { border-color: #1a1f36; color: #1a1f36; }
         .filter-btn.active { background: #1a1f36; color: #fff; border-color: #1a1f36; }
-        .filter-btn.birthday-btn.active { background: #f59e0b; border-color: #f59e0b; }
+        .filter-btn.birthday-btn.active  { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+        .filter-btn.holiday-btn.active   { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+        .filter-btn.emergency-btn.active { background: #ef4444; border-color: #ef4444; color: #fff; }
+        .filter-btn.events-btn.active    { background: #3b82f6; border-color: #3b82f6; color: #fff; }
 
         /* Right well event list */
         .upcoming-event.is-past .ev-name { color: #bbb; }
@@ -301,8 +302,23 @@
 
     <main class="main">
         <div class="filter-bar">
-            <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All Events</button>
-            <button class="filter-btn birthday-btn" id="filter-birthdays" onclick="setFilter('birthdays')">🎂 Birthdays</button>
+            <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
+            <button class="filter-btn events-btn" id="filter-events" onclick="setFilter('events')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Has Events
+            </button>
+            <button class="filter-btn birthday-btn" id="filter-birthdays" onclick="setFilter('birthdays')">
+                <svg width="13" height="13" viewBox="0 0 9 11" fill="none"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2.5" rx="0.3" fill="#9ca3af"/><circle cx="4.5" cy="8" r="3.5" fill="#fbbf24"/><circle cx="4.5" cy="8" r="2" fill="#fde68a"/></svg>
+                Birthdays
+            </button>
+            <button class="filter-btn holiday-btn" id="filter-holidays" onclick="setFilter('holidays')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                Holidays
+            </button>
+            <button class="filter-btn emergency-btn" id="filter-emergency" onclick="setFilter('emergency')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Emergency
+            </button>
         </div>
         <div class="months-grid" id="months-grid"></div>
         <div class="expanded-panel" id="month-detail"></div>
@@ -499,12 +515,43 @@ function buildMonthNav() {
 // ── Right well all events ─────────────────────────────────────────────────────
 function setFilter(filter) {
     activeFilter = filter;
-    document.getElementById('filter-all').classList.toggle('active', filter === 'all');
-    document.getElementById('filter-birthdays').classList.toggle('active', filter === 'birthdays');
-    document.getElementById('right-well-title').textContent = filter === 'birthdays' ? '🎂 Birthdays' : 'All Events';
+
+    // Button states
+    ['all','events','birthdays','holidays','emergency'].forEach(f => {
+        const el = document.getElementById(`filter-${f}`);
+        if (el) el.classList.toggle('active', f === filter);
+    });
+
+    // Right well title
+    const titles = { all:'All Events', events:'Events', birthdays:'Birthdays', holidays:'Public Holidays', emergency:'Emergencies' };
+    document.getElementById('right-well-title').textContent = titles[filter] || 'All Events';
+
+    // Show / hide month cards
+    const bdMonths = new Set(birthdayEvents.map(bd => MONTH_ORDER[parseInt(bd.date.split('-')[1]) - 1]));
+    monthKeys.forEach(month => {
+        const card = document.getElementById(`card-${month}`);
+        if (!card) return;
+        const evs = calendarData[month]?.events || [];
+        let show;
+        switch (filter) {
+            case 'all':       show = true; break;
+            case 'events':    show = evs.length > 0; break;
+            case 'birthdays': show = bdMonths.has(month); break;
+            case 'holidays':  show = evs.some(e => e.permanent); break;
+            case 'emergency': show = evs.some(e => e.emergency); break;
+            default:          show = true;
+        }
+        card.style.display = show ? '' : 'none';
+    });
+
+    // Close expanded panel if its month is now hidden
+    if (activeMonth && document.getElementById(`card-${activeMonth}`)?.style.display === 'none') {
+        closeExpanded();
+    }
+
     buildUpcoming();
 
-    // Mobile: reorder and auto-open accordion when birthdays selected
+    // Mobile birthday reorder
     const main = document.querySelector('.main');
     const mobileList = document.getElementById('mobile-events-list');
     const chevron = document.querySelector('.mobile-events-toggle span:last-child');
@@ -516,7 +563,6 @@ function setFilter(filter) {
         main.classList.remove('birthday-mode');
     }
 
-    // Re-render open month if any
     if (activeMonth) {
         const panel = document.getElementById('month-detail');
         renderExpandedPanel(panel, activeMonth, null);
@@ -528,19 +574,26 @@ function buildUpcoming() {
     const now  = new Date();
     const all  = [];
 
+    // Calendar events (respect filter)
     if (activeFilter !== 'birthdays') {
         monthKeys.forEach(m => {
-            const color = calendarData[m].color || '#007bff';
-            (calendarData[m].events || []).forEach(ev => all.push({ ...ev, color, month: m }));
+            (calendarData[m].events || []).forEach(ev => {
+                if (activeFilter === 'holidays'  && !ev.permanent) return;
+                if (activeFilter === 'emergency' && !ev.emergency) return;
+                if (activeFilter === 'events'    && false) return; // show all events
+                all.push({ ...ev, month: m });
+            });
         });
     }
 
-    birthdayEvents.forEach(bd => {
-        const month = monthKeys.find(m =>
-            (calendarData[m].events||[]).some(e => e.date.slice(5,7) === bd.date.slice(5,7))
-        ) || monthKeys[0];
-        all.push({ ...bd, color: '#f59e0b', month, isBirthday: true });
-    });
+    // Birthdays (include in all / events / birthdays)
+    if (['all','events','birthdays'].includes(activeFilter)) {
+        birthdayEvents.forEach(bd => {
+            const mIdx  = parseInt(bd.date.split('-')[1]) - 1;
+            const month = monthKeys.find(m => MONTH_ORDER.indexOf(m) === mIdx) || monthKeys[0];
+            all.push({ ...bd, color: '#f59e0b', month, isBirthday: true });
+        });
+    }
 
     all.sort((a, b) => a.date.localeCompare(b.date));
 
@@ -584,11 +637,12 @@ function buildGrid() {
         const card   = document.createElement('div');
         card.className = 'month-card';
         card.id = `card-${month}`;
+        const mc = data.color || '#3b82f6';
         card.innerHTML = `
-            <div class="card-header" style="background:${data.color||'#007bff'}">
+            <div class="card-header" style="background:${mc}">
                 <span>${month}</span><span class="chevron">&#9660;</span>
             </div>
-            <div class="card-body">
+            <div class="card-body" style="background:${mc}18">
                 <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
                 <div class="card-dots">${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':ev.emergency?'#ef4444':'#3b82f6')}" title="${ev.name}"></div>`).join('')}</div>
             </div>`;
@@ -724,8 +778,10 @@ function renderExpandedPanel(panel, month, highlightDate) {
         }).join('');
 
         const rxnBar = hasEv ? `<div class="cell-reactions" id="rxns-${dateStr}"></div>` : '';
-        const dayCss = (calendarData._day_colors || {})[dateStr];
-        const dayColorStyle = dayCss ? ` style="background:${dayCss}"` : '';
+        const manualColor = (calendarData._day_colors || {})[dateStr];
+        const eventColor  = dayEvs.find(ev => ev.color && !ev.isBirthday && !ev.isPersonal && !isHoliday(ev))?.color;
+        const cellBg      = manualColor || (eventColor ? eventColor + '38' : null);
+        const dayColorStyle = cellBg ? ` style="background:${cellBg}"` : '';
 
         cells += `<div class="${cls}" id="cell-${dateStr}"${dayColorStyle} ${hasEv?`onclick="openFeedback('${dateStr}',this)"`:''}>
             <div class="cell-num">${d}</div>

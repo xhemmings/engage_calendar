@@ -78,8 +78,8 @@
         .cg-color-btn { background: none; border: none; cursor: pointer; opacity: 0; padding: 1px 2px; color: #aaa; border-radius: 3px; line-height: 1; transition: opacity .15s, background .1s; }
         .cg-cell:hover .cg-color-btn { opacity: 1; }
         .cg-color-btn:hover { background: rgba(0,0,0,.08); color: #555; }
-        .cg-dots { display: flex; flex-wrap: wrap; gap: 2px; }
-        .cg-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .cg-ev-swatches { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; align-items: center; max-width: 30px; }
+        .cg-ev-sq { width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0; }
 
         /* Day color popup */
         .day-color-popup { display: none; position: fixed; background: #fff; border-radius: 12px; box-shadow: 0 6px 28px rgba(0,0,0,.18); padding: 14px 16px; z-index: 500; width: 216px; }
@@ -496,19 +496,21 @@ function renderMonth() {
         const isTd = ds === `${TODAY.getFullYear()}-${pad(TODAY.getMonth()+1)}-${pad(TODAY.getDate())}`;
         const isSel= ds === selectedDate;
         const evs  = evMap[ds]||[];
-        const bdSVG = (name) => `<svg width="9" height="11" viewBox="0 0 9 11" style="display:block;flex-shrink:0" title="${name}"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2.5" rx="0.3" fill="#e5e7eb"/><circle cx="4.5" cy="8" r="3.5" fill="#fbbf24"/><circle cx="4.5" cy="8" r="2" fill="#fde68a"/></svg>`;
-        const dots = evs.slice(0,5).map(e =>
-            e.type === 'birthday'
-                ? bdSVG(e.name)
-                : `<div class="cg-dot" style="background:${e.color}" title="${e.name}"></div>`
-        ).join('');
-        const dc   = dayColors[ds];
+        const dc      = dayColors[ds];
         const dcCls   = dc ? ' day-colored' : '';
         const dcStyle = dc ? ` style="--day-color:${dc}"` : '';
         const paintBtn = `<button class="cg-color-btn" onclick="openDayColorPopup('${ds}',event)" title="Set day color"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.477-1.129-.29-.289-.47-.692-.47-1.125A1.64 1.64 0 0 1 14.82 17.5h1.96c3.573 0 6.267-2.866 6.267-6.548C22 6.865 17.5 2 12 2z"/><circle cx="7" cy="12.5" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="12.5" r="1" fill="currentColor" stroke="none"/></svg></button>`;
+        const bdSqSVG = (n) => `<svg width="7" height="8" viewBox="0 0 9 11" style="display:block;flex-shrink:0" title="${n}"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2" rx="0.3" fill="#9ca3af"/><rect x="1" y="5.5" width="7" height="5" rx="1" fill="#fbbf24"/><rect x="2.5" y="6.5" width="4" height="3" rx="0.5" fill="#fde68a"/></svg>`;
+        const swatches = evs.slice(0,4).map(e =>
+            e.type === 'birthday'
+                ? bdSqSVG(e.name)
+                : `<div class="cg-ev-sq" style="background:${e.color}" title="${e.name}"></div>`
+        ).join('');
         html += `<div class="cg-cell${isWk?' weekend':''}${isTd?' today':''}${isSel?' selected':''}${dcCls}"${dcStyle} onclick="selectDay('${ds}')">
-            <div class="cg-cell-top"><div class="cg-num">${d}</div>${paintBtn}</div>
-            <div class="cg-dots">${dots}</div>
+            <div class="cg-cell-top">
+                <div class="cg-num">${d}</div>
+                <div class="cg-ev-swatches">${swatches}${paintBtn}</div>
+            </div>
         </div>`;
     }
     document.getElementById('cal-body').innerHTML = `<div class="compact-grid">${html}</div>`;
