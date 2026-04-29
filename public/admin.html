@@ -75,9 +75,10 @@
         .cg-cell.day-colored { background: var(--day-color); }
         .cg-cell-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
         .cg-num { font-size: .82rem; font-weight: 600; color: #374151; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .cg-color-btn { background: none; border: none; cursor: pointer; opacity: 0; padding: 1px 2px; color: #aaa; border-radius: 3px; line-height: 1; transition: opacity .15s, background .1s; }
-        .cg-cell:hover .cg-color-btn { opacity: 1; }
-        .cg-color-btn:hover { background: rgba(0,0,0,.08); color: #555; }
+        .cg-day-dot { width: 10px; height: 10px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: transform .12s; border: none; padding: 0; }
+        .cg-day-dot:hover { transform: scale(1.35); }
+        .cg-day-dot.unset { background: transparent; border: 1.5px solid #d1d5db; opacity: 0; }
+        .cg-cell:hover .cg-day-dot.unset { opacity: 1; }
         .cg-ev-swatches { display: flex; gap: 2px; flex-wrap: wrap; justify-content: flex-end; align-items: center; max-width: 30px; }
         .cg-ev-sq { width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0; }
 
@@ -499,7 +500,9 @@ function renderMonth() {
         const dc      = dayColors[ds];
         const dcCls   = dc ? ' day-colored' : '';
         const dcStyle = dc ? ` style="--day-color:${dc}"` : '';
-        const paintBtn = `<button class="cg-color-btn" onclick="openDayColorPopup('${ds}',event)" title="Set day color"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.477-1.129-.29-.289-.47-.692-.47-1.125A1.64 1.64 0 0 1 14.82 17.5h1.96c3.573 0 6.267-2.866 6.267-6.548C22 6.865 17.5 2 12 2z"/><circle cx="7" cy="12.5" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="12.5" r="1" fill="currentColor" stroke="none"/></svg></button>`;
+        const paintBtn = dc
+            ? `<button class="cg-day-dot" style="background:${dc}" onclick="openDayColorPopup('${ds}',event)" title="Change day color"></button>`
+            : `<button class="cg-day-dot unset" onclick="openDayColorPopup('${ds}',event)" title="Set day color"></button>`;
         const bdSqSVG = (n) => `<svg width="7" height="8" viewBox="0 0 9 11" style="display:block;flex-shrink:0" title="${n}"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2" rx="0.3" fill="#9ca3af"/><rect x="1" y="5.5" width="7" height="5" rx="1" fill="#fbbf24"/><rect x="2.5" y="6.5" width="4" height="3" rx="0.5" fill="#fde68a"/></svg>`;
         const swatches = evs.slice(0,4).map(e =>
             e.type === 'birthday'
