@@ -548,11 +548,13 @@ function applyFilters() {
         const card = document.getElementById(`card-${month}`);
         if (!card) return;
         const evs = calendarData[month]?.events || [];
+        const mIdx2 = MONTH_ORDER.indexOf(month);
+        const hasBd = bdMonths.has(month);
         let show = none;
-        if (!show && activeFilters.has('events'))    show = show || evs.length > 0;
-        if (!show && activeFilters.has('birthdays')) show = show || bdMonths.has(month);
-        if (!show && activeFilters.has('holidays'))  show = show || evs.some(e => e.permanent);
-        if (!show && activeFilters.has('emergency')) show = show || evs.some(e => e.emergency);
+        if (!show && activeFilters.has('events'))    show = evs.length > 0 || hasBd;
+        if (!show && activeFilters.has('birthdays')) show = hasBd;
+        if (!show && activeFilters.has('holidays'))  show = evs.some(e => e.permanent);
+        if (!show && activeFilters.has('emergency')) show = evs.some(e => e.emergency);
         card.style.display = show ? '' : 'none';
     });
 
@@ -652,14 +654,26 @@ function buildGrid() {
         const card   = document.createElement('div');
         card.className = 'month-card';
         card.id = `card-${month}`;
-        const mc = data.color || '#3b82f6';
+        const mc   = data.color || '#3b82f6';
+        const mIdx = MONTH_ORDER.indexOf(month);
+        const bds  = birthdayEvents.filter(bd => parseInt(bd.date.split('-')[1]) - 1 === mIdx);
+        const bdDots = bds.map(bd => {
+            const name = bd.name.replace('🎂 ','');
+            return `<svg width="9" height="9" viewBox="0 0 9 11" title="${name}"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2" rx="0.3" fill="#9ca3af"/><rect x="1" y="5.5" width="7" height="5" rx="1" fill="#fbbf24"/><rect x="2.5" y="6.5" width="4" height="3" rx="0.5" fill="#fde68a"/></svg>`;
+        }).join('');
+        const evCount  = events.length;
+        const bdCount  = bds.length;
+        const countStr = [evCount ? `${evCount} event${evCount!==1?'s':''}` : '', bdCount ? `${bdCount} birthday${bdCount!==1?'s':''}` : ''].filter(Boolean).join(' · ') || 'No events';
         card.innerHTML = `
             <div class="card-header" style="background:${mc}">
                 <span>${month}</span><span class="chevron">&#9660;</span>
             </div>
             <div class="card-body" style="background:${mc}18">
-                <div class="card-event-count">${events.length} event${events.length!==1?'s':''}</div>
-                <div class="card-dots">${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':ev.emergency?'#ef4444':'#3b82f6')}" title="${ev.name}"></div>`).join('')}</div>
+                <div class="card-event-count">${countStr}</div>
+                <div class="card-dots">
+                    ${events.map(ev=>`<div class="card-dot" style="background:${ev.color||(isHoliday(ev)?'#7c3aed':ev.emergency?'#ef4444':'#3b82f6')}" title="${ev.name}"></div>`).join('')}
+                    ${bdDots}
+                </div>
             </div>`;
         card.addEventListener('click', () => toggleMonth(month));
         grid.appendChild(card);
