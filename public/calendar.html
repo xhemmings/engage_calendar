@@ -161,7 +161,8 @@
         .fp-admin-edit { border-top: 1px solid #eee; padding: 12px 16px; }
         .fp-admin-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .fp-admin-event-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-        .fp-admin-event-row span { flex: 1; font-size: .83rem; color: #333; background: #f5f5f5; padding: 5px 8px; border-radius: 4px; }
+        .fp-admin-event-row .fp-ev-name { flex: 1; font-size: .83rem; color: #333; background: #f5f5f5; padding: 5px 8px; border-radius: 4px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fp-perm-badge { font-size: .67rem; color: #9ca3af; padding: 1px 7px; background: #f3f4f6; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
         .fp-admin-del { background: none; border: none; color: #ddd; cursor: pointer; font-size: .85rem; padding: 3px 5px; }
         .fp-admin-del:hover { color: #e53935; }
         .fp-admin-add { display: flex; gap: 6px; margin-top: 8px; }
@@ -455,7 +456,9 @@ async function loadData() {
     const [calRes, bdRes] = await Promise.all([fetch('/api/calendar'), fetch('/api/birthdays')]);
     calendarData   = await calRes.json();
     birthdayEvents = await bdRes.json();
-    monthKeys = Object.keys(calendarData).sort((a,b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+    monthKeys = Object.keys(calendarData)
+        .filter(k => !k.startsWith('_'))
+        .sort((a,b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
     buildGrid(); buildUpcoming(); buildMonthNav();
     if (me) loadBookmarks(); // re-render with event names now data is ready
 }
@@ -939,13 +942,13 @@ function renderAdminEdit(dateStr, dayEvs, month) {
         ).join('');
         return `<div class="fp-admin-event-row" id="fp-evrow-${dateStr}-${i}">
             ${isPermanent
-                ? `<span style="width:12px;height:12px;border-radius:50%;background:${dot};display:inline-block;flex-shrink:0"></span>`
+                ? `<div style="width:10px;height:10px;border-radius:2px;background:${dot};flex-shrink:0"></div>`
                 : `<button class="fp-ev-color-dot" style="background:${dot}" onclick="toggleEvColorPicker('${dateStr}',${i})" title="Change color"></button>`}
-            <span style="${isPermanent?'color:#7c3aed;font-weight:600':''}">
+            <span class="fp-ev-name" style="${isPermanent?'color:#7c3aed;font-weight:600;background:#f0ebff':''}">
                 ${isPermanent ? '✨ ' : ''}${ev.name}
             </span>
             ${isPermanent
-                ? `<span style="font-size:.67rem;color:#9ca3af;padding:1px 5px;background:#f3f4f6;border-radius:8px">Permanent</span>`
+                ? `<div class="fp-perm-badge">Permanent</div>`
                 : `<button class="fp-admin-del" onclick="adminDeleteEvent('${month}','${dateStr}',${i})" title="Remove">✕</button>`}
         </div>
         ${isPermanent ? '' : `<div class="fp-ev-color-row" id="fp-evpicker-${dateStr}-${i}" style="display:none">
