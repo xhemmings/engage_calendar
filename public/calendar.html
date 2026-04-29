@@ -800,8 +800,11 @@ function renderExpandedPanel(panel, month, highlightDate) {
 
         const evTags = dayEvs.map(ev => {
             const tagCls = ev.isPersonal ? 'personal' : ev.isBirthday ? 'birthday' : isHoliday(ev) ? 'holiday' : '';
-            const tagStyle = (ev.color && !ev.isBirthday && !ev.isPersonal && !isHoliday(ev))
-                ? ` style="background:${ev.color}22;color:${ev.color}"` : '';
+            let tagStyle = '';
+            if (!ev.isPersonal && !ev.isBirthday && !isHoliday(ev)) {
+                const c = ev.color || color; // event color, or fall back to month colour
+                tagStyle = ` style="background:${c}28;color:${c};font-weight:700"`;
+            }
             const label = isHoliday(ev) ? `✨ ${ev.name}` : ev.name;
             return `<span class="cell-ev-tag ${tagCls}"${tagStyle}>${label}</span>`;
         }).join('');
