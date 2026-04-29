@@ -302,20 +302,20 @@
 
     <main class="main">
         <div class="filter-bar">
-            <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
-            <button class="filter-btn events-btn" id="filter-events" onclick="setFilter('events')">
+            <button class="filter-btn active" id="filter-all" onclick="toggleFilter('all')">All</button>
+            <button class="filter-btn events-btn" id="filter-events" onclick="toggleFilter('events')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Has Events
             </button>
-            <button class="filter-btn birthday-btn" id="filter-birthdays" onclick="setFilter('birthdays')">
+            <button class="filter-btn birthday-btn" id="filter-birthdays" onclick="toggleFilter('birthdays')">
                 <svg width="13" height="13" viewBox="0 0 9 11" fill="none"><ellipse cx="4.5" cy="0.9" rx="0.9" ry="1.1" fill="#f97316"/><rect x="4" y="1.8" width="1" height="2.5" rx="0.3" fill="#9ca3af"/><circle cx="4.5" cy="8" r="3.5" fill="#fbbf24"/><circle cx="4.5" cy="8" r="2" fill="#fde68a"/></svg>
                 Birthdays
             </button>
-            <button class="filter-btn holiday-btn" id="filter-holidays" onclick="setFilter('holidays')">
+            <button class="filter-btn holiday-btn" id="filter-holidays" onclick="toggleFilter('holidays')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 Holidays
             </button>
-            <button class="filter-btn emergency-btn" id="filter-emergency" onclick="setFilter('emergency')">
+            <button class="filter-btn emergency-btn" id="filter-emergency" onclick="toggleFilter('emergency')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 Emergency
             </button>
@@ -401,7 +401,7 @@ let activeMonth        = null;
 let expandedEl         = null;
 let me                 = null;
 let activeFeedbackKey  = null;
-let activeFilter       = 'all';
+let activeFilters      = new Set(); // empty = show all
 let personalEvents     = [];
 let addModalType       = 'personal';
 let selectedEventColor = '#1a1f36';
@@ -513,18 +513,31 @@ function buildMonthNav() {
 }
 
 // ── Right well all events ─────────────────────────────────────────────────────
-function setFilter(filter) {
-    activeFilter = filter;
+function toggleFilter(filter) {
+    if (filter === 'all') {
+        activeFilters.clear();
+    } else {
+        if (activeFilters.has(filter)) activeFilters.delete(filter);
+        else activeFilters.add(filter);
+    }
+    applyFilters();
+}
 
-    // Button states
-    ['all','events','birthdays','holidays','emergency'].forEach(f => {
+function applyFilters() {
+    const none = activeFilters.size === 0;
+
+    // Button states — "All" active when nothing is selected
+    document.getElementById('filter-all').classList.toggle('active', none);
+    ['events','birthdays','holidays','emergency'].forEach(f => {
         const el = document.getElementById(`filter-${f}`);
-        if (el) el.classList.toggle('active', f === filter);
+        if (el) el.classList.toggle('active', activeFilters.has(f));
     });
 
     // Right well title
-    const titles = { all:'All Events', events:'Events', birthdays:'Birthdays', holidays:'Public Holidays', emergency:'Emergencies' };
-    document.getElementById('right-well-title').textContent = titles[filter] || 'All Events';
+    const labels = { events:'Events', birthdays:'Birthdays', holidays:'Holidays', emergency:'Emergency' };
+    document.getElementById('right-well-title').textContent = none
+        ? 'All Events'
+        : [...activeFilters].map(f => labels[f]).join(' & ');
 
     // Show / hide month cards
     const bdMonths = new Set(birthdayEvents.map(bd => MONTH_ORDER[parseInt(bd.date.split('-')[1]) - 1]));
@@ -532,19 +545,14 @@ function setFilter(filter) {
         const card = document.getElementById(`card-${month}`);
         if (!card) return;
         const evs = calendarData[month]?.events || [];
-        let show;
-        switch (filter) {
-            case 'all':       show = true; break;
-            case 'events':    show = evs.length > 0; break;
-            case 'birthdays': show = bdMonths.has(month); break;
-            case 'holidays':  show = evs.some(e => e.permanent); break;
-            case 'emergency': show = evs.some(e => e.emergency); break;
-            default:          show = true;
-        }
+        let show = none;
+        if (!show && activeFilters.has('events'))    show = show || evs.length > 0;
+        if (!show && activeFilters.has('birthdays')) show = show || bdMonths.has(month);
+        if (!show && activeFilters.has('holidays'))  show = show || evs.some(e => e.permanent);
+        if (!show && activeFilters.has('emergency')) show = show || evs.some(e => e.emergency);
         card.style.display = show ? '' : 'none';
     });
 
-    // Close expanded panel if its month is now hidden
     if (activeMonth && document.getElementById(`card-${activeMonth}`)?.style.display === 'none') {
         closeExpanded();
     }
@@ -555,7 +563,7 @@ function setFilter(filter) {
     const main = document.querySelector('.main');
     const mobileList = document.getElementById('mobile-events-list');
     const chevron = document.querySelector('.mobile-events-toggle span:last-child');
-    if (filter === 'birthdays') {
+    if (activeFilters.has('birthdays')) {
         main.classList.add('birthday-mode');
         mobileList.classList.add('open');
         if (chevron) chevron.textContent = '▲';
@@ -563,10 +571,7 @@ function setFilter(filter) {
         main.classList.remove('birthday-mode');
     }
 
-    if (activeMonth) {
-        const panel = document.getElementById('month-detail');
-        renderExpandedPanel(panel, activeMonth, null);
-    }
+    if (activeMonth) renderExpandedPanel(document.getElementById('month-detail'), activeMonth, null);
 }
 
 function buildUpcoming() {
@@ -574,20 +579,27 @@ function buildUpcoming() {
     const now  = new Date();
     const all  = [];
 
-    // Calendar events (respect filter)
-    if (activeFilter !== 'birthdays') {
+    const none = activeFilters.size === 0;
+    const wantBd = none || activeFilters.has('birthdays') || activeFilters.has('events');
+    const wantEv = none || activeFilters.has('events') || activeFilters.has('holidays') || activeFilters.has('emergency');
+
+    // Calendar events
+    if (wantEv) {
         monthKeys.forEach(m => {
             (calendarData[m].events || []).forEach(ev => {
-                if (activeFilter === 'holidays'  && !ev.permanent) return;
-                if (activeFilter === 'emergency' && !ev.emergency) return;
-                if (activeFilter === 'events'    && false) return; // show all events
+                if (!none) {
+                    const ok = (activeFilters.has('events')) ||
+                               (activeFilters.has('holidays')  && ev.permanent) ||
+                               (activeFilters.has('emergency') && ev.emergency);
+                    if (!ok) return;
+                }
                 all.push({ ...ev, month: m });
             });
         });
     }
 
-    // Birthdays (include in all / events / birthdays)
-    if (['all','events','birthdays'].includes(activeFilter)) {
+    // Birthdays
+    if (wantBd) {
         birthdayEvents.forEach(bd => {
             const mIdx  = parseInt(bd.date.split('-')[1]) - 1;
             const month = monthKeys.find(m => MONTH_ORDER.indexOf(m) === mIdx) || monthKeys[0];
