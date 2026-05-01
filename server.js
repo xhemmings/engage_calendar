@@ -203,10 +203,14 @@ async function sendEmailOTP(email, otp) {
   });
 }
 
-// Route OTP by role: superadmin → WhatsApp, everyone else → email
+// Superadmin → WhatsApp primary + email backup (if set). Everyone else → email only.
 async function sendOTP(user, otp) {
   if (user.role === 'superadmin') {
     await sendWhatsAppOTP(user.phone, otp);
+    if (user.email) {
+      try { await sendEmailOTP(user.email, otp); }
+      catch(e) { console.error('Superadmin email backup failed:', e.message); }
+    }
   } else {
     if (!user.email) throw new Error('No email address on file for this user');
     await sendEmailOTP(user.email, otp);
@@ -242,7 +246,10 @@ app.post('/api/login', async (req, res) => {
   catch (e) { console.error('OTP send error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
   const pending = jwt.sign({ otp, username, role: rows[0].role }, JWT_SECRET, { expiresIn: '5m' });
   res.cookie('otp_pending', pending, cookieOpts(300000));
-  res.json({ ok: true, channel: rows[0].role === 'superadmin' ? 'whatsapp' : 'email', hasPassword: !!rows[0].password_hash });
+  const channel = rows[0].role === 'superadmin'
+    ? (rows[0].email ? 'whatsapp+email' : 'whatsapp')
+    : 'email';
+  res.json({ ok: true, channel, hasPassword: !!rows[0].password_hash });
 });
 
 app.post('/api/verify-otp', (req, res) => {
