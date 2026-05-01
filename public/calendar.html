@@ -748,9 +748,8 @@ function renderExpandedPanel(panel, month, highlightDate) {
     const idx    = monthKeys.indexOf(month);
     const color  = data.color || '#007bff';
 
-    const firstDate = events[0] ? new Date(events[0].date+'T00:00:00') : new Date();
+    const monthIdx  = MONTH_ORDER.indexOf(month); // always from month name, never from events
     const year      = events[0] ? parseInt(events[0].date.split('-')[0]) : TODAY.getFullYear();
-    const monthIdx  = events[0] ? parseInt(events[0].date.split('-')[1])-1 : TODAY.getMonth();
     const daysInMonth = new Date(year, monthIdx+1, 0).getDate();
     const firstDow    = new Date(year, monthIdx, 1).getDay();
 
