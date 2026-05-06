@@ -239,8 +239,11 @@ app.get('/api/auth-status', (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { username } = req.body || {};
-  const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-  if (!rows[0]) return res.status(401).json({ error: 'Username not found' });
+  const { rows } = await pool.query(
+    'SELECT * FROM users WHERE username = $1 OR LOWER(email) = LOWER($1)',
+    [username]
+  );
+  if (!rows[0]) return res.status(401).json({ error: 'Username or email not found' });
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try { await sendOTP(rows[0], otp); }
   catch (e) { console.error('OTP send error:', e.message); return res.status(500).json({ error: 'Failed to send verification code' }); }
